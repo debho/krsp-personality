@@ -23,7 +23,7 @@ Here we will walk through the analysis.
 
 ## Data Preparation
 
-In the `r_scripts/data-cleaning.R` file I fiiltered for juveniles and got rid of the individuals that were run a second time by April in 2017 and 2018. We then impute parturition dates using a simple model which can be found in `model-training.R`
+In the `r_scripts/data-cleaning.R` file I filtered for juveniles and got rid of the individuals that were run a second time by April in 2017 and 2018. We then impute parturition dates using a simple model which can be found in `model-training.R`
 
 
 ```{r}

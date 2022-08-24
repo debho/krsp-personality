@@ -16,7 +16,12 @@ train = TRUE #if TRUE, this will train/fit the part date model
 # Happy trails - M
 ######################################################
 
-con = dbConnect(MySQL(), group = 'krsp-aws') #nolint
+con <- DBI::dbConnect(RMySQL::MySQL(),
+                      host = 'krsp.cepb5cjvqban.us-east-2.rds.amazonaws.com',
+                      dbname = 'krsp',
+                      username = Sys.getenv('krsp_user'),
+                      password = Sys.getenv('krsp_password')
+)
 
 
 # Create Personality file

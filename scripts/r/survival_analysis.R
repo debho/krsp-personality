@@ -4,6 +4,7 @@ library(tidyverse)
 library(lme4)
 library(car)
 library(DHARMa)
+library(Matrix)
 
 #TODO:
   # Add 2021 litter data from krsp temp db
