@@ -10,11 +10,16 @@ library(DHARMa)
 library(Matrix)
 
 personality = read_csv('data/personality-mrw-survival.csv', show_col_types = FALSE) %>% 
-  mutate(survival = as.integer(survived_200d)) %>% 
-  
   group_by(grid, year) %>% 
   mutate(growth_sc = scale(growth, scale = T, center = T)[,1],
-         part_sc = scale(part, scale = T, center = T)[,1]) %>% 
+         part_sc = scale(part, scale = T, center = T)[,1],
+         gridyear = as.factor(gridyear),
+         sex = as.factor(sex),
+         year = as.factor(year),
+         cohort = as.factor(cohort),
+         grid = as.factor(grid),
+         survived_200d = as.integer(survived_200d),
+         made_it = as.integer(longevity >= 60)) %>%
   ungroup() 
 
 
@@ -68,7 +73,7 @@ plot(simulationOutput)
 dat2 = personality %>% 
   mutate(across(c(year, dam_id, litter_id, grid), as_factor))
 
-survival_to_200d = glmer(survival ~ sex + 
+survival_to_200d = glmer(survived_200d ~ sex + 
                            scale(age_at_trial) + 
                            part_sc*scale(grid_density) +
                            growth_sc*scale(grid_density) + 
