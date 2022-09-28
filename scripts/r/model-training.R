@@ -20,7 +20,11 @@ connect_to_krsp <- function() {
   require(RMySQL)
   out <- tryCatch({
     message <- "Connecting to KRSP . . . "
-    DBI::dbConnect(RMySQL::MySQL(), group = "krsp-aws")
+    DBI::dbConnect(RMySQL::MySQL(),
+                          host = 'krsp.cepb5cjvqban.us-east-2.rds.amazonaws.com',
+                          dbname = 'krsp',
+                          username = Sys.getenv('krsp_user'),
+                          password = Sys.getenv('krsp_password'))
   },
   error = function(cond) {
     message("Unable to connect to KRSP database")

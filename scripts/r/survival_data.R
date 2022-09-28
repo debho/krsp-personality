@@ -1,10 +1,10 @@
 library(tidyverse)
 library(RMySQL)
 # script to get survival to 200d
+# run this after data-cleaning.R
 
 # TODO:
 # Need to get survival to fall census
-
 
 con <- DBI::dbConnect(RMySQL::MySQL(),
                       host = 'krsp.cepb5cjvqban.us-east-2.rds.amazonaws.com',
@@ -39,6 +39,7 @@ personality = tbl(con, 'flastall2') %>%
   collect() %>% 
   left_join(personality, .,  by = c('squirrel_id', 'litter_id', 'dam_id'), suffix = c('.per', '.fla')) %>% 
   left_join(censi, by = c('squirrel_id' = 'squirrel_id', 'byear' = 'census_year')) %>% 
+  distinct(squirrel_id, .keep_all = TRUE) %>% #otherwise there are 4 duplicates for some reason 
   replace_na(list(made_it = 0)) %>% 
   # This logic just ensures that for individuals born in 2021 we use the census 'made it' column rather than longevity
   mutate(age_at_trial = julian_trialdate - part,
@@ -49,7 +50,8 @@ personality = tbl(con, 'flastall2') %>%
            TRUE ~ FALSE
          ),
          nest_days = as.numeric(difftime(n2_date, fieldBDate, units = 'days')),
-         growth = (n2_weight - n1_weight)/nest_days)
+         growth = (n2_weight - n1_weight)/nest_days,
+         gridyear = as.factor(paste(grid, year)))
 
 # Well also pull in grid densities here as well
 

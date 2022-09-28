@@ -134,7 +134,7 @@ survival_to_200d = glmer(survival ~ sex +
                              part_sc*scale(grid_density) +
                              growth_sc*scale(grid_density) + 
                              oft1*mis1*scale(grid_density) + 
-                             grid +
+                             grid + 
                              (1|year) + 
                              (1|dam_id) + 
                              (1|litter_id), 

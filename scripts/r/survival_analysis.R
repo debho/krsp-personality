@@ -1,3 +1,6 @@
+# MAIN FILE
+# runs models once i have all the data cleaned and consolidated
+
 # Analysis of survival
 options(tidyverse.quiet = TRUE)
 library(tidyverse)
@@ -6,12 +9,9 @@ library(car)
 library(DHARMa)
 library(Matrix)
 
-#TODO:
-  # Add 2021 litter data from krsp temp db
-
-
 personality = read_csv('data/personality-mrw-survival.csv', show_col_types = FALSE) %>% 
   mutate(survival = as.integer(survived_200d)) %>% 
+  
   group_by(grid, year) %>% 
   mutate(growth_sc = scale(growth, scale = T, center = T)[,1],
          part_sc = scale(part, scale = T, center = T)[,1]) %>% 
@@ -26,7 +26,7 @@ pca_agg = prcomp(aggression, scale = TRUE, center = TRUE)
 mis1 = predict(pca_agg)[,1]
 
 activity = personality %>% 
-  select(walk, still, hang, jump, chew, hole) %>% 
+  select(walk, still, hang, jump, chew, hole, groom) %>% 
   mutate(across(everything(), ~if_else(is.na(.x), median(.x, na.rm = TRUE), .x)))
 
 pca_act = prcomp(activity, scale = TRUE, center = TRUE)
@@ -37,8 +37,7 @@ personality$mis1 = unlist(mis1)
 
 # Survival to fall census -------------------------------------------------
 dat = personality %>% 
-  mutate(across(c(year, dam_id, litter_id, grid), as_factor)) %>% 
-  filter(year != 2019)
+  mutate(across(c(year, dam_id, litter_id, grid), as_factor))
 
 survival_to_autumn = glmer(made_it ~ sex + 
                              scale(age_at_trial) + 
@@ -46,6 +45,7 @@ survival_to_autumn = glmer(made_it ~ sex +
                              growth_sc*scale(grid_density) + 
                              oft1*mis1*scale(grid_density) + 
                              grid +
+                             mastyear + 
                              (1|year) + 
                              (1|dam_id) + 
                              (1|litter_id), 
@@ -65,7 +65,7 @@ plot(simulationOutput)
 # Looks pretty good
 
 # Model 2 Survival to 200 days --------------------------------------------
-dat = personality %>% 
+dat2 = personality %>% 
   mutate(across(c(year, dam_id, litter_id, grid), as_factor))
 
 survival_to_200d = glmer(survival ~ sex + 
@@ -74,15 +74,17 @@ survival_to_200d = glmer(survival ~ sex +
                            growth_sc*scale(grid_density) + 
                            oft1*mis1*scale(grid_density) + 
                            grid +
+                           mastyear +
                            (1|year) + 
                            (1|dam_id) + 
                            (1|litter_id),
-                         data = dat,
+                         data = dat2,
                          na.action = 'na.omit',
                          family = 'binomial',
                          control = glmerControl(optimizer = "bobyqa", optCtrl = list(maxfun = 1e8)))
 #allFit(mod)
 car::Anova(survival_to_200d)
+summary(survival_to_200d)
 
 # Diagnostics
 simulationOutput = simulateResiduals(survival_to_200d, plot = F)

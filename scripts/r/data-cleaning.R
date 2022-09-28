@@ -16,27 +16,25 @@ train = TRUE #if TRUE, this will train/fit the part date model
 # Happy trails - M
 ######################################################
 
+# run this script first to read in raw data and predict missing part dates
+
 con <- DBI::dbConnect(RMySQL::MySQL(),
                       host = 'krsp.cepb5cjvqban.us-east-2.rds.amazonaws.com',
                       dbname = 'krsp',
                       username = Sys.getenv('krsp_user'),
                       password = Sys.getenv('krsp_password')
-)
+) #if i've already created a connection in a diff script i don't need to run this again
 
 
 # Create Personality file
-personality = read_csv('data/personality-master.csv', show_col_types = FALSE) %>% # nolint
+personality = read_csv('data/personality-master-updated.csv', show_col_types = FALSE) %>% # nolint
   janitor::clean_names() %>%
   filter(ageclass == "J",
          exclude_unless_video_reanalyzed == "N",
          proceed_with_caution == "N",
-         # remove due to GC experiment
-         !observer == "SWK") %>% 
-  group_by(sq_id, year) %>% 
-  filter(
-    # remove the samples run by April in 2017 and 2018
-    if( (year %in% 2017:2018) && (observer == "ARM")) trialnumber == 1 else TRUE
-  ) %>% 
+         !observer == "SWK", # remove due to GC experiment
+         trialnumber == 1) %>% # take only trial 1 for each individual
+  group_by(sq_id, year) %>%
   select(squirrel_id = sq_id
          , sex
          , year
@@ -65,6 +63,9 @@ personality = read_csv('data/personality-master.csv', show_col_types = FALSE) %>
          , mis_duration
          , collar
          , comments) %>%
+  # create binary var for mast year and food-add
+  mutate(mastyear = as.factor(as.integer(year == 2005 | year == 2019)),
+         bucketaccess = as.factor(as.integer(grid == "AG"))) %>%
   ungroup() %>%
   # Join to db data
   left_join(
@@ -78,15 +79,14 @@ personality = read_csv('data/personality-master.csv', show_col_types = FALSE) %>
          trialdate = as_date(trialdate, format = "%m/%d/%y"),
          julian_trialdate = yday(trialdate))
 
-
 # Generate predictions from model
 full_data = personality %>%
-  filter(!is.na(part))
+  filter(!is.na(part)) #these ones have part dates
 
 missing_parts = personality %>%
   filter(is.na(part)) %>%
   select(-part) %>%
-  mutate(across(c(grid, year), as_factor))
+  mutate(across(c(grid, year), as_factor)) #there are 56 juvs with no part dates
 
 if (train) {
   system("Rscript scripts/r/model-training.R")
@@ -102,6 +102,7 @@ predictions = predict(part_model, missing_parts) %>%
          part = as.integer(part))
 
 # write file
-personality = bind_rows(full_data, predictions)
+personality = bind_rows(full_data, predictions) %>%
+  filter(!is.na(part)) #still have 26 juvs with no part dates
 
 write_csv(personality, file = 'data/personality-mrw-imputed.csv')
