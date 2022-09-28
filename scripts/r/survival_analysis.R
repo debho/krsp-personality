@@ -8,51 +8,88 @@ library(lme4)
 library(car)
 library(DHARMa)
 library(Matrix)
+library(standardize)
+library(ade4)
 
 personality = read_csv('data/personality-mrw-survival.csv', show_col_types = FALSE) %>% 
   group_by(grid, year) %>% 
   mutate(growth_sc = scale(growth, scale = T, center = T)[,1],
          part_sc = scale(part, scale = T, center = T)[,1],
+         age_sc = scale(age_at_trial, scale = T, center = T)[,1],
          gridyear = as.factor(gridyear),
          sex = as.factor(sex),
          year = as.factor(year),
          cohort = as.factor(cohort),
          grid = as.factor(grid),
          survived_200d = as.integer(survived_200d),
-         made_it = as.integer(longevity >= 60)) %>%
+         litter_id = as.factor(litter_id),
+         dam_id = as.factor(dam_id)) %>%
+  filter(!is.na(walk),
+         !is.na(approachlatency)) %>% #removes those with only OFT/MIS
   ungroup() 
 
+# GETTING PCA LOADINGS AND OFT/MIS SCORES 
+personality[is.na(personality$oft_duration),
+            "oft_duration"] <- 450.000
+personality[is.na(personality$mis_duration),
+            "mis_duration"] <- 300.000
 
-aggression = personality %>% 
-  select(front, back, attack, attacklatency, approachlatency) %>% 
-  mutate(across(everything(), ~if_else(is.na(.x), median(.x, na.rm = TRUE), .x))) 
+activity <- transmute(personality,
+                      walk_prop = (walk/oft_duration),
+                      jump_prop = (jump/oft_duration),
+                      hole_prop = (hole/oft_duration),
+                      hang_prop = (hang/oft_duration),
+                      still_prop = (still/oft_duration),
+                      chew_prop = (chew/oft_duration),
+                      groom_prop = (groom/oft_duration)) 
 
-pca_agg = prcomp(aggression, scale = TRUE, center = TRUE)
-mis1 = predict(pca_agg)[,1]
+pca.oft <- dudi.pca(activity,
+                    scale = TRUE,
+                    scannf = FALSE,
+                    nf = 7)
 
-activity = personality %>% 
-  select(walk, still, hang, jump, chew, hole, groom) %>% 
-  mutate(across(everything(), ~if_else(is.na(.x), median(.x, na.rm = TRUE), .x)))
+pca.oft$c1 * -1
+personality$oft1 <- (pca.oft$l1$RS1 * -1) 
+factoextra::get_eig(pca.oft) #PC1 explains 40.01% of the variance
 
-pca_act = prcomp(activity, scale = TRUE, center = TRUE)
-oft1 = predict(pca_act)[,1]
+aggression <- transmute(personality,
+                        front_prop = (front/mis_duration),
+                        back_prop = (back/mis_duration),
+                        approachlat_prop = (approachlatency/mis_duration),
+                        attacklat_prop = (attacklatency/mis_duration),
+                        attack_prop = (attack/mis_duration)) 
 
-personality$oft1 = unlist(oft1)
-personality$mis1 = unlist(mis1)
+pca.mis <- dudi.pca(aggression,
+                    scale = TRUE,
+                    scannf = FALSE,
+                    nf = 5)
+
+pca.mis$c1
+personality$mis1 <- pca.mis$l1$RS1
+factoextra::get_eig(pca.mis) #PC1 explains 53.82% of the variance
+
+# scale personality by gridyear 
+personality <- personality %>%
+  mutate(oft1 = scale_by(oft1 ~ gridyear),
+         mis1 = scale_by(mis1 ~ gridyear))
+# CHECK FOR THINGS THAT HAVE EFFECTS ON PERSONALITY FIRST (idk wtf i'm doing?????????)
+oft_predictors <- lm(oft1 ~ sex + age_sc + grid_density,
+                       data = personality)
+vif(oft_predictors) #all VIF < 3
+summary(oft_predictors)
+
+mis_predictors <- lm(mis1 ~ sex + age_sc + grid_density,
+                       data = personality)
+vif(mis_predictors) #all VIF < 3
+summary(mis_predictors)
 
 # Survival to fall census -------------------------------------------------
+# i need to fix the made_it thing
 dat = personality %>% 
   mutate(across(c(year, dam_id, litter_id, grid), as_factor))
 
-survival_to_autumn = glmer(made_it ~ sex + 
-                             scale(age_at_trial) + 
-                             part_sc*scale(grid_density) +
-                             growth_sc*scale(grid_density) + 
+survival_to_autumn = glmer(made_it ~ 
                              oft1*mis1*scale(grid_density) + 
-                             grid +
-                             mastyear + 
-                             (1|year) + 
-                             (1|dam_id) + 
                              (1|litter_id), 
                            data = dat,
                            na.action = 'na.omit',
@@ -70,20 +107,14 @@ plot(simulationOutput)
 # Looks pretty good
 
 # Model 2 Survival to 200 days --------------------------------------------
+# WHAT FIXED/RANDOM EFFECTS DO I INCLUDE LMAO RIP
 dat2 = personality %>% 
   mutate(across(c(year, dam_id, litter_id, grid), as_factor))
 
-survival_to_200d = glmer(survived_200d ~ sex + 
-                           scale(age_at_trial) + 
-                           part_sc*scale(grid_density) +
-                           growth_sc*scale(grid_density) + 
-                           oft1*mis1*scale(grid_density) + 
-                           grid +
-                           mastyear +
-                           (1|year) + 
-                           (1|dam_id) + 
-                           (1|litter_id),
-                         data = dat2,
+survival_to_200d = glmer(survived_200d ~ 
+                         oft1*mis1*scale(grid_density)+mastyear+
+                         (1|litter_id),
+                         data = personality,
                          na.action = 'na.omit',
                          family = 'binomial',
                          control = glmerControl(optimizer = "bobyqa", optCtrl = list(maxfun = 1e8)))
