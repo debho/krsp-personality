@@ -72,13 +72,14 @@ factoextra::get_eig(pca.mis) #PC1 explains 53.82% of the variance
 personality <- personality %>%
   mutate(oft1 = scale_by(oft1 ~ gridyear),
          mis1 = scale_by(mis1 ~ gridyear))
+
 # CHECK FOR THINGS THAT HAVE EFFECTS ON PERSONALITY FIRST (idk wtf i'm doing?????????)
-oft_predictors <- lm(oft1 ~ sex + age_sc + grid_density,
+oft_predictors <- lm(oft1 ~ sex + age_sc + grid_density + bucketaccess + mastyear,
                        data = personality)
 vif(oft_predictors) #all VIF < 3
 summary(oft_predictors)
 
-mis_predictors <- lm(mis1 ~ sex + age_sc + grid_density,
+mis_predictors <- lm(mis1 ~ sex + age_sc + grid_density + bucketaccess,
                        data = personality)
 vif(mis_predictors) #all VIF < 3
 summary(mis_predictors)
