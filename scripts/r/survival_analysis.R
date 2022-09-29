@@ -12,10 +12,9 @@ library(standardize)
 library(ade4)
 
 personality = read_csv('data/personality-mrw-survival.csv', show_col_types = FALSE) %>% 
-  group_by(grid, year) %>% 
-  mutate(growth_sc = scale(growth, scale = T, center = T)[,1],
-         part_sc = scale(part, scale = T, center = T)[,1],
-         age_sc = scale(age_at_trial, scale = T, center = T)[,1],
+  mutate(part = scale(part, center = T),
+         age = scale(age_at_trial, center = T),
+         grid_density = scale(grid_density, center = T),
          gridyear = as.factor(gridyear),
          sex = as.factor(sex),
          year = as.factor(year),
@@ -25,8 +24,7 @@ personality = read_csv('data/personality-mrw-survival.csv', show_col_types = FAL
          litter_id = as.factor(litter_id),
          dam_id = as.factor(dam_id)) %>%
   filter(!is.na(walk),
-         !is.na(approachlatency)) %>% #removes those with only OFT/MIS
-  ungroup() 
+         !is.na(approachlatency))
 
 # GETTING PCA LOADINGS AND OFT/MIS SCORES 
 personality[is.na(personality$oft_duration),
@@ -41,16 +39,16 @@ activity <- transmute(personality,
                       hang_prop = (hang/oft_duration),
                       still_prop = (still/oft_duration),
                       chew_prop = (chew/oft_duration),
-                      groom_prop = (groom/oft_duration)) 
+                      groom_prop = (groom/oft_duration))
 
 pca.oft <- dudi.pca(activity,
                     scale = TRUE,
                     scannf = FALSE,
                     nf = 7)
 
-pca.oft$c1 * -1
+pca.oft$c1
 personality$oft1 <- (pca.oft$l1$RS1 * -1) 
-factoextra::get_eig(pca.oft) #PC1 explains 40.01% of the variance
+factoextra::get_eig(pca.oft) #PC1 explains 40.02% of the variance
 
 aggression <- transmute(personality,
                         front_prop = (front/mis_duration),
@@ -66,20 +64,23 @@ pca.mis <- dudi.pca(aggression,
 
 pca.mis$c1
 personality$mis1 <- pca.mis$l1$RS1
-factoextra::get_eig(pca.mis) #PC1 explains 53.82% of the variance
+factoextra::get_eig(pca.mis) #PC1 explains 52.71% of the variance
 
-# scale personality by gridyear 
+# scale personality and growth rate by gridyear 
 personality <- personality %>%
   mutate(oft1 = scale_by(oft1 ~ gridyear),
-         mis1 = scale_by(mis1 ~ gridyear))
+         mis1 = scale_by(mis1 ~ gridyear),
+         growth = scale_by(growth ~ gridyear))
 
 # CHECK FOR THINGS THAT HAVE EFFECTS ON PERSONALITY FIRST (idk wtf i'm doing?????????)
-oft_predictors <- lm(oft1 ~ sex + age_sc + grid_density + bucketaccess + mastyear,
+oft_predictors <- lmer(oft1 ~ sex + age + growth + cohort +
+                       (1|litter_id) + (1|gridyear),
                        data = personality)
 vif(oft_predictors) #all VIF < 3
 summary(oft_predictors)
 
-mis_predictors <- lm(mis1 ~ sex + age_sc + grid_density + bucketaccess,
+mis_predictors <- lmer(mis1 ~ sex + age + growth + cohort +
+                         (1|litter_id) + (1|gridyear),
                        data = personality)
 vif(mis_predictors) #all VIF < 3
 summary(mis_predictors)
@@ -109,12 +110,9 @@ plot(simulationOutput)
 
 # Model 2 Survival to 200 days --------------------------------------------
 # WHAT FIXED/RANDOM EFFECTS DO I INCLUDE LMAO RIP
-dat2 = personality %>% 
-  mutate(across(c(year, dam_id, litter_id, grid), as_factor))
-
 survival_to_200d = glmer(survived_200d ~ 
-                         oft1*mis1*scale(grid_density)+mastyear+
-                         (1|litter_id),
+                         oft1 * mis1 * grid_density + growth + age + part +
+                         (1|gridyear) + (1|litter_id),
                          data = personality,
                          na.action = 'na.omit',
                          family = 'binomial',

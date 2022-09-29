@@ -1,7 +1,7 @@
 options(tidyverse.quiet = TRUE,
         tidymodels.quiet = TRUE,
         warn = -1)
-        
+
 library(tidyverse)
 library(tidymodels)
 library(lubridate)
@@ -33,7 +33,8 @@ personality = read_csv('data/personality-master-updated.csv', show_col_types = F
          exclude_unless_video_reanalyzed == "N",
          proceed_with_caution == "N",
          !observer == "SWK", # remove due to GC experiment
-         trialnumber == 1) %>% # take only trial 1 for each individual
+         trialnumber == 1,
+         grid %in% c("KL", "SU")) %>% # take only trial 1 for each individual
   group_by(sq_id, year) %>%
   select(squirrel_id = sq_id
          , sex
@@ -72,7 +73,7 @@ personality = read_csv('data/personality-master-updated.csv', show_col_types = F
     .,
     dbGetQuery(con, read_file("scripts/sql/temp.sql")),
     by = "squirrel_id"
-) %>%
+  ) %>%
   # Format for the PART prediction model
   mutate(part = yday(fieldBDate),
          n1_date = yday(n1_date),

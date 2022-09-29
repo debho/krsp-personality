@@ -60,5 +60,6 @@ grids_density = dbGetQuery(con, query) %>%
   select(grid, year = Year, grid_density = spr_density)
 
 # Write the new file
-personality = left_join(personality, grids_density, by = c("grid", "year"))
+personality = left_join(personality, grids_density, by = c("grid", "year")) %>%
+  filter(grid %in% c("KL", "SU"))
 write_csv(personality, file = 'data/personality-mrw-survival.csv')
