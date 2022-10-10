@@ -10,6 +10,7 @@ library(DHARMa)
 library(Matrix)
 library(standardize)
 library(ade4)
+library(lubridate)
 
 personality = read_csv('data/personality-mrw-survival.csv', show_col_types = FALSE) %>% 
   mutate(survival = as.integer(survived_200d)) %>% 

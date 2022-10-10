@@ -66,7 +66,7 @@ aggression = personality %>%
 
 
 activity = personality %>% 
-  select(walk, still, hang, jump, chew, hole) %>% 
+  select(walk, still, hang, jump, chew, hole, groom) %>% 
   mutate(across(everything(), ~if_else(is.na(.x), median(.x, na.rm = TRUE), .x)))
 
 pca_agg = prcomp(aggression, scale = TRUE, center = TRUE)
@@ -97,8 +97,7 @@ ggplot(personality, aes(oft1, mis1)) +
 ```{r, warning=FALSE,message=FALSE}
 dat1 = personality %>% 
   mutate(across(c(year, dam_id, litter_id, grid), as_factor)) %>%
-  filter(year != 2019,
-         !if_any(c(survival, sex, age_at_trial, grid_density, growth_sc, part_sc, oft1, mis1, grid, year, dam_id, litter_id), .fns = is.na))
+  filter(!if_any(c(survival, sex, age_at_trial, grid_density, growth_sc, part_sc, oft1, mis1, grid, year, dam_id, litter_id), .fns = is.na))
 
 survival_to_autumn = glmer(made_it ~ sex + 
                              scale(age_at_trial) + 
@@ -161,7 +160,6 @@ So, we see males have lower survival survival than males
 
 ```{r, echo =FALSE}
 dat1 %>% 
-  filter(year != 2021) %>% 
   group_by(year, sex) %>% 
   summarize(n = n(),
             survival = sum(made_it), .groups = "drop",
@@ -203,7 +201,7 @@ ggplot(preds, aes(x = mis1, y = response)) +
   theme_minimal()
 ```
 
-> This is a simplified plit that only accounts for a single level of sex and grid. However it captures the main effect
+> This is a simplified plot that only accounts for a single level of sex and grid. However it captures the main effect
 
 
 Finally, we have a significant interaction between grid density and aggression, where more aggressive individuals are more likely to survive to autumn under high densities.
