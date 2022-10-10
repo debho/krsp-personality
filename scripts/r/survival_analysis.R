@@ -65,11 +65,9 @@ personality <- personality %>%
 
 # Survival to fall census -------------------------------------------------
 dat = personality %>% 
-  mutate(across(c(year, dam_id, litter_id, grid), as_factor)) %>% 
-  filter(year != 2019)
+  mutate(across(c(year, dam_id, litter_id, grid), as_factor)) 
 
 survival_to_autumn = glmer(made_it ~ sex + 
-                             scale(age_at_trial) + 
                              part_sc*scale(grid_density) +
                              growth_sc*scale(grid_density) + 
                              oft1*mis1*scale(grid_density) + 
