@@ -58,8 +58,12 @@ personality = tbl(con, 'flastall2') %>%
 query = read_file('scripts/sql/grid_density.sql')
 grids_density = dbGetQuery(con, query) %>% 
   select(grid, year = Year, grid_density = spr_density)
+personality[personality$survived_200d == T,
+            "made_it"] <- TRUE
+
 
 # Write the new file
 personality = left_join(personality, grids_density, by = c("grid", "year")) %>%
-  filter(grid %in% c("KL", "SU"))
+  filter(grid %in% c("KL", "SU")) %>%
+  mutate(survived_200d = as.numeric(survived_200d))
 write_csv(personality, file = 'data/personality-mrw-survival.csv')
