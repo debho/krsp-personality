@@ -54,26 +54,24 @@ activity = personality %>%
 pca_act = prcomp(activity, scale = TRUE, center = TRUE)
 oft1 = predict(pca_act)[,1]
 
-personality$oft1 = unlist(oft1)
-personality$mis1 = unlist(mis1)
+personality$oft1 = unlist(oft1 * -1)
+personality$mis1 = unlist(mis1 * -1)
 
 
 # scale personality and growth rate by gridyear 
 personality <- personality %>%
-  mutate(oft1 = scale_by(oft1 ~ gridyear),
-         mis1 = scale_by(mis1 ~ gridyear),
-         growth = scale_by(growth ~ gridyear))
+  mutate(oft1 = scale(oft1, scale = T, center = T),
+         mis1 = scale(mis1, scale = T, center = T),
+         grid_density = scale_by(grid_density ~ year),
+         age_sc = scale(age_at_trial, scale = T, center = T))
 
 # Survival to fall census -------------------------------------------------
 dat = personality %>% 
-  mutate(across(c(year, dam_id, litter_id, grid), as_factor)) 
+  mutate(across(c(year, dam_id, litter_id, grid, mastyear), as_factor)) 
 
 survival_to_autumn = glmer(made_it ~ sex + 
-                             part_sc*scale(grid_density) +
-                             growth_sc*scale(grid_density) + 
-                             oft1*mis1*scale(grid_density) + 
-                             grid +
-                             (1|year) + 
+                             growth_sc*grid_density + 
+                             oft1*mis1*grid_density + 
                              (1|dam_id) + 
                              (1|litter_id), 
                            data = dat,
@@ -92,25 +90,21 @@ plot(simulationOutput)
 # Looks pretty good
 
 # Model 2 Survival to 200 days --------------------------------------------
-dat = personality %>% 
+dat2 = personality %>% 
   mutate(across(c(year, dam_id, litter_id, grid), as_factor))
 
-survival_to_200d = glmer(survival ~ sex + 
-                           scale(age_at_trial) + 
-                           part_sc*scale(grid_density) +
-                           growth_sc*scale(grid_density) + 
-                           oft1*mis1*scale(grid_density) + 
-                           grid +
-                           (1|year) + 
+survival_to_200d = glmer(survived_200d ~ sex + 
+                           growth_sc*grid_density + 
+                           oft1*mis1*grid_density + 
                            (1|dam_id) + 
                            (1|litter_id),
-                         data = dat,
+                         data = dat2,
                          na.action = 'na.omit',
                          family = 'binomial',
                          control = glmerControl(optimizer = "bobyqa", optCtrl = list(maxfun = 1e8)))
 #allFit(mod)
 car::Anova(survival_to_200d)
-summary(survival_to_200d)
+summary(survival_to_200d) 
 # Diagnostics
 simulationOutput = simulateResiduals(survival_to_200d, plot = F)
 
@@ -118,3 +112,17 @@ residuals(simulationOutput, quantileFunction = qnorm)
 plot(simulationOutput)
 # Theres some wonkiness here with one of the random effects deviating
 # But it seems to not be a massive issue
+
+oft_indiv <- lmer(oft1 ~ sex + age_sc + 
+                    (1|year) +
+                    (1|litter_id) +
+                    (1|dam_id),
+                  data = dat)
+summary(oft_indiv)
+
+mis_indiv <- lmer(mis1 ~ sex + age_sc + 
+                    (1|year) +
+                    (1|litter_id) +
+                    (1|dam_id),
+                  data = dat)
+summary(mis_indiv)

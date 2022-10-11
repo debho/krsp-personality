@@ -1,5 +1,6 @@
 library(tidyverse)
 library(RMySQL)
+library(lubridate)
 # script to get survival to 200d
 # run this after data-cleaning.R
 
@@ -66,9 +67,9 @@ personality <- personality %>%
              (longevity >= 70 | age_at_trial >= 70) ~ TRUE,
            TRUE ~ FALSE)))
 
-
 # Write the new file
 personality = left_join(personality, grids_density, by = c("grid", "year")) %>%
   filter(grid %in% c("KL", "SU")) %>%
   mutate(survived_200d = as.numeric(survived_200d))
-write_csv(personality, file = 'data/personality-mrw-survival.csv'
+write_csv(personality, file = 'data/personality-mrw-survival.csv')
+

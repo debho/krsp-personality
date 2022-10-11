@@ -33,8 +33,8 @@ personality = read_csv('data/personality-master-updated.csv', show_col_types = F
          exclude_unless_video_reanalyzed == "N",
          proceed_with_caution == "N",
          !observer == "SWK", # remove due to GC experiment
-         trialnumber == 1,
-         grid %in% c("KL", "SU")) %>% # take only trial 1 for each individual
+         trialnumber == 1, # take only trial 1 for each individual
+         grid %in% c("KL", "SU")) %>% # only unmanipulated grids
   group_by(sq_id, year) %>%
   select(squirrel_id = sq_id
          , sex
@@ -65,8 +65,7 @@ personality = read_csv('data/personality-master-updated.csv', show_col_types = F
          , collar
          , comments) %>%
   # create binary var for mast year and food-add
-  mutate(mastyear = as.factor(as.integer(year == 2005 | year == 2019)),
-         bucketaccess = as.factor(as.integer(grid == "AG"))) %>%
+  mutate(mastyear = as.factor(as.integer(year == 2005 | year == 2019))) %>%
   ungroup() %>%
   # Join to db data
   left_join(
@@ -104,6 +103,6 @@ predictions = predict(part_model, missing_parts) %>%
 
 # write file
 personality = bind_rows(full_data, predictions) %>%
-  filter(!is.na(part)) #still have 26 juvs with no part dates
+  filter(!is.na(part))
 
 write_csv(personality, file = 'data/personality-mrw-imputed.csv')
