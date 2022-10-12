@@ -60,9 +60,9 @@ personality$mis1 = unlist(mis1 * -1)
 
 # scale personality and growth rate by gridyear 
 personality <- personality %>%
-  mutate(oft1 = scale(oft1, scale = T, center = T),
-         mis1 = scale(mis1, scale = T, center = T),
-         grid_density = scale_by(grid_density ~ year),
+  mutate(oft1 = scale_by(oft1 ~ gridyear),
+         mis1 = scale_by(mis1 ~ gridyear),
+         grid_density = scale(grid_density, scale = T, center = T),
          age_sc = scale(age_at_trial, scale = T, center = T))
 
 # Survival to fall census -------------------------------------------------
@@ -70,7 +70,7 @@ dat = personality %>%
   mutate(across(c(year, dam_id, litter_id, grid, mastyear), as_factor)) 
 
 survival_to_autumn = glmer(made_it ~ sex + 
-                             growth_sc*grid_density + 
+                             growth_sc*grid_density +
                              oft1*mis1*grid_density + 
                              (1|dam_id) + 
                              (1|litter_id), 
@@ -113,16 +113,17 @@ plot(simulationOutput)
 # Theres some wonkiness here with one of the random effects deviating
 # But it seems to not be a massive issue
 
-oft_indiv <- lmer(oft1 ~ sex + age_sc + 
+oft_indiv <- lmer(oft1 ~ sex * age_sc * grid_density +
                     (1|year) +
                     (1|litter_id) +
                     (1|dam_id),
                   data = dat)
 summary(oft_indiv)
 
-mis_indiv <- lmer(mis1 ~ sex + age_sc + 
+mis_indiv <- lmer(mis1 ~ sex * age_sc * grid_density +
                     (1|year) +
                     (1|litter_id) +
                     (1|dam_id),
                   data = dat)
 summary(mis_indiv)
+car::Anova(mis_indiv)
