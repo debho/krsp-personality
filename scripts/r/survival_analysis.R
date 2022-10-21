@@ -65,12 +65,38 @@ personality <- personality %>%
          grid_density = scale(grid_density, scale = T, center = T),
          age_sc = scale(age_at_trial, scale = T, center = T))
 
+# Factors that may influence personality ----------------------------------
+oft_indiv <- lmer(oft1 ~
+                    sex + 
+                    age_sc*grid_density +
+                    growth_sc*grid_density +
+                    part_sc*grid_density +
+                    mastyear +
+                    (1|gridyear) +
+                    (1|litter_id) +
+                    (1|dam_id),
+                  data = dat)
+summary(oft_indiv) # no significant effects
+
+mis_indiv <- lmer(mis1 ~
+                    sex +
+                    age_sc*grid_density +
+                    growth_sc*grid_density +
+                    part_sc*grid_density +
+                    mastyear +
+                    (1|gridyear) +
+                    (1|litter_id) +
+                    (1|dam_id),
+                  data = dat)
+summary(mis_indiv) # no significant effects
+
 # Survival to fall census -------------------------------------------------
 dat = personality %>% 
   mutate(across(c(year, dam_id, litter_id, grid, mastyear), as_factor)) 
 
-survival_to_autumn = glmer(made_it ~ sex + 
+survival_to_autumn = glmer(made_it ~
                              growth_sc*grid_density +
+                             part_sc*grid_density +
                              oft1*mis1*grid_density + 
                              (1|dam_id) + 
                              (1|litter_id), 
@@ -91,10 +117,11 @@ plot(simulationOutput)
 
 # Model 2 Survival to 200 days --------------------------------------------
 dat2 = personality %>% 
-  mutate(across(c(year, dam_id, litter_id, grid), as_factor))
+  mutate(across(c(year, dam_id, litter_id, grid, mastyear), as_factor))
 
-survival_to_200d = glmer(survived_200d ~ sex + 
+survival_to_200d = glmer(survived_200d ~ 
                            growth_sc*grid_density + 
+                           part_sc*grid_density +
                            oft1*mis1*grid_density + 
                            (1|dam_id) + 
                            (1|litter_id),
@@ -112,18 +139,3 @@ residuals(simulationOutput, quantileFunction = qnorm)
 plot(simulationOutput)
 # Theres some wonkiness here with one of the random effects deviating
 # But it seems to not be a massive issue
-
-oft_indiv <- lmer(oft1 ~ sex * age_sc * grid_density +
-                    (1|year) +
-                    (1|litter_id) +
-                    (1|dam_id),
-                  data = dat)
-summary(oft_indiv)
-
-mis_indiv <- lmer(mis1 ~ sex * age_sc * grid_density +
-                    (1|year) +
-                    (1|litter_id) +
-                    (1|dam_id),
-                  data = dat)
-summary(mis_indiv)
-car::Anova(mis_indiv)
