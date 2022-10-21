@@ -18,6 +18,7 @@ survival_residuals <- dat %>%
 survival_autumn_oftmis_fig <- ggplot(survival_residuals,
                                   aes(oft1, made_it, col = binned_mis1)) +
   theme_classic() +
+  labs_pubr() +
   geom_point(size = 3,
              alpha = 0.5) +
   stat_smooth(aes(color = binned_mis1),
@@ -25,27 +26,33 @@ survival_autumn_oftmis_fig <- ggplot(survival_residuals,
               se = F,
               method.args = list(family = binomial)) +
   scale_color_paletteer_d("ggprism::viridis") + 
-  labs(x = "Activity",
+  labs(title = "Effect of personality traits on survival to autumn",
+       x = "Activity",
        y = "Probability of survival to autumn",
-       col = "Aggression") 
+       col = "Aggression",
+       tag = "a.") 
 plot(survival_autumn_oftmis_fig)
 
 survival_autumn_mast_fig <- ggplot(survival_residuals,
-                                  aes(mastyear, made_it, col = year)) +
+                                  aes(mastyear, made_it, fill = mastyear)) +
   theme_classic() + 
-  stat_boxplot(geom = "errorbar",
-               width = 0.6) +
-  geom_boxplot(aes(col = year)) +
+  labs_pubr() +
   geom_jitter(aes(col = year)) +
   scale_color_paletteer_d("ggprism::viridis") + 
-  labs(x = "Year type",
+  geom_violin(alpha = 0.8) +
+  scale_fill_paletteer_d("ggprism::pastels") +
+  labs(title = "Effect of mast year on survival",
+       x = "Mast Year",
        y = "Probability of survival to autumn",
-       col = "Year")
+       col = "Year",
+       fill = "Mast Year",
+       tag = "b.")
 plot(survival_autumn_mast_fig)
 
 survival_200d_oft_fig <- ggplot(survival_residuals,
                                   aes(oft1, survived_200d, col = binned_density)) +
   theme_classic() +
+  labs_pubr() +
   geom_point(size = 3,
              alpha = 0.5) +
   stat_smooth(aes(color = binned_density),
@@ -53,27 +60,34 @@ survival_200d_oft_fig <- ggplot(survival_residuals,
               se = F,
               method.args = list(family = binomial)) +
   scale_color_paletteer_d("ggprism::plasma") + 
-  labs(x = "Activity",
+  labs(title = "Effect of activity on survival to 200 days",
+       x = "Activity",
        y = "Probability of survival to 200 days",
-       col = "Grid density (Spring)")
+       col = "Grid density (Spring)",
+       tag = "c.")
 plot(survival_200d_oft_fig)
 
 survival_200d_mast_fig <- ggplot(survival_residuals,
-                                  aes(mastyear, survived_200d, col = year)) +
+                                  aes(mastyear, survived_200d, fill = mastyear)) +
   theme_classic() +
-  stat_boxplot(geom = "errorbar",
-               width = 0.6) +
-  geom_boxplot(aes(col = year)) +
+  labs_pubr() +
   geom_jitter(aes(col = year)) +
-  scale_color_paletteer_d("ggprism::plasma") + 
-  labs(x = "Year",
+  scale_color_paletteer_d("ggprism::viridis") + 
+  geom_violin(alpha = 0.8) +
+  scale_fill_paletteer_d("ggprism::pastels") +
+  labs(x = "Mast Year",
        y = "Probability of survival to 200 days",
-       col = "Year")
+       col = "Year",
+       fill = "Mast Year",
+       tag = "d.")
 plot(survival_200d_mast_fig)
 
-ggsave("figures/survival~personality.png",
-       arrangeGrob(survival_autumn_oft_fig, survival_autumn_mis_fig,
-                   survival_200d_oft_fig, survival_200d_mis_fig,
-                   ncol = 2,
-                   nrow = 2,
-                   top = "Effects of juvenile personality on survival"))
+ggsave("figures/survival~significant.png",
+       grid.arrange(survival_autumn_oftmis_fig,
+                    survival_autumn_mast_fig + theme(legend.position = "none"),
+                    survival_200d_oft_fig,
+                    survival_200d_mast_fig + theme(legend.position = "bottom"),
+                    ncol = 2,
+                    nrow = 2))
+
+       
