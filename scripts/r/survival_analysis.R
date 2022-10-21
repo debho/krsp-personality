@@ -98,6 +98,7 @@ survival_to_autumn = glmer(made_it ~
                              growth_sc*grid_density +
                              part_sc*grid_density +
                              oft1*mis1*grid_density + 
+                             mastyear +
                              (1|dam_id) + 
                              (1|litter_id), 
                            data = dat,
@@ -123,6 +124,7 @@ survival_to_200d = glmer(survived_200d ~
                            growth_sc*grid_density + 
                            part_sc*grid_density +
                            oft1*mis1*grid_density + 
+                           mastyear +
                            (1|dam_id) + 
                            (1|litter_id),
                          data = dat2,
