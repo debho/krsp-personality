@@ -95,10 +95,10 @@ dat = personality %>%
   mutate(across(c(year, dam_id, litter_id, grid, mastyear), as_factor)) 
 
 survival_to_autumn = glmer(made_it ~
+                             oft1*mis1*grid_density + 
                              growth_sc*grid_density +
                              part_sc*grid_density +
-                             oft1*mis1*grid_density + 
-                             mastyear +
+                             (1|year) +
                              (1|dam_id) + 
                              (1|litter_id), 
                            data = dat,
@@ -121,10 +121,10 @@ dat2 = personality %>%
   mutate(across(c(year, dam_id, litter_id, grid, mastyear), as_factor))
 
 survival_to_200d = glmer(survived_200d ~ 
+                           oft1*mis1*grid_density + 
                            growth_sc*grid_density + 
                            part_sc*grid_density +
-                           oft1*mis1*grid_density + 
-                           mastyear +
+                           (1|year) +
                            (1|dam_id) + 
                            (1|litter_id),
                          data = dat2,
@@ -133,7 +133,7 @@ survival_to_200d = glmer(survived_200d ~
                          control = glmerControl(optimizer = "bobyqa", optCtrl = list(maxfun = 1e8)))
 #allFit(mod)
 car::Anova(survival_to_200d)
-summary(survival_to_200d) 
+summary(survival_to_200d)
 # Diagnostics
 simulationOutput = simulateResiduals(survival_to_200d, plot = F)
 
