@@ -18,7 +18,7 @@ survival_residuals <- dat %>%
                               labels = c("low", "high")))
 
 survival_autumn_oftmis_fig <- ggplot(survival_residuals,
-                                  aes(mis1, made_it, col = binned_oft1)) +
+                                  aes(oft1, made_it, col = binned_mis1)) +
   theme_classic() +
   labs_pubr() +
   geom_point(size = 3,
@@ -28,12 +28,43 @@ survival_autumn_oftmis_fig <- ggplot(survival_residuals,
               se = F,
               method.args = list(family = binomial)) +
   scale_color_paletteer_d("ggprism::viridis") + 
-  labs(title = "Effect of personality traits on survival to autumn",
-       x = "Aggression",
+  labs(x = "Activity",
        y = "Probability of survival to autumn",
-       col = "Activity",
+       col = "Aggression",
        tag = "a.") 
 plot(survival_autumn_oftmis_fig)
+
+survival_autumn_mast_fig <- ggplot(survival_residuals,
+                                 aes(mastyear, made_it, fill = mastyear)) +
+  theme_classic() +
+  labs_pubr() +
+  geom_jitter(aes(col = year)) +
+  scale_color_paletteer_d("ggprism::viridis") + 
+  geom_violin(alpha = 0.8) +
+  scale_fill_paletteer_d("ggprism::pastels") +
+  labs(x = "Mast Year",
+       y = "Probability of survival to autumn",
+       col = "Year",
+       fill = "Mast Year",
+       tag = "a.")
+plot(survival_autumn_mast_fig)
+
+survival_200d_oftmis_fig <- ggplot(survival_residuals,
+                                aes(oft1, survived_200d, col = binned_mis1)) +
+  theme_classic() +
+  labs_pubr() +
+  geom_point(size = 3,
+             alpha = 0.5) +
+  stat_smooth(aes(color = binned_mis1),
+              method = "glm",
+              se = F,
+              method.args = list(family = binomial)) +
+  scale_color_paletteer_d("ggprism::viridis") + 
+  labs(x = "Activity",
+       y = "Probability of survival to 200 days",
+       col = "Aggression",
+       tag = "b.")
+plot(survival_200d_oftmis_fig)
 
 survival_200d_oft_fig <- ggplot(survival_residuals,
                                   aes(oft1, survived_200d, col = binned_density)) +
@@ -46,11 +77,9 @@ survival_200d_oft_fig <- ggplot(survival_residuals,
               se = F,
               method.args = list(family = binomial)) +
   scale_color_paletteer_d("ggprism::plasma") + 
-  labs(title = "Effect of activity on survival to 200 days",
-       x = "Activity",
+  labs(x = "Activity",
        y = "Probability of survival to 200 days",
-       col = "Grid density (Spring)",
-       tag = "b.")
+       col = "Grid density (Spring)")
 plot(survival_200d_oft_fig)
 
 survival_200d_mast_fig <- ggplot(survival_residuals,
@@ -64,14 +93,18 @@ survival_200d_mast_fig <- ggplot(survival_residuals,
   labs(x = "Mast Year",
        y = "Probability of survival to 200 days",
        col = "Year",
-       fill = "Mast Year")
+       fill = "Mast Year",
+       tag = "b.")
 plot(survival_200d_mast_fig)
 
 ggsave("figures/survival~oftmis.png",
        grid.arrange(survival_autumn_oftmis_fig,
-                    survival_200d_oft_fig,
+                    survival_200d_oftmis_fig,
                     ncol = 2,
                     nrow = 1))
-ggsave("figures/survived200~mast.png",
-       survival_200d_mast_fig)
+ggsave("figures/survival~mast.png",
+       grid.arrange(survival_autumn_mast_fig,
+                    survival_200d_mast_fig,
+                    ncol = 2,
+                    nrow = 1))
        

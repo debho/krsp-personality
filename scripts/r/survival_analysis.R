@@ -72,7 +72,7 @@ oft_indiv <- lmer(oft1 ~
                     growth_sc*grid_density +
                     part_sc*grid_density +
                     mastyear +
-                    (1|gridyear) +
+                    (1|year) +
                     (1|litter_id) +
                     (1|dam_id),
                   data = dat)
@@ -84,7 +84,7 @@ mis_indiv <- lmer(mis1 ~
                     growth_sc*grid_density +
                     part_sc*grid_density +
                     mastyear +
-                    (1|gridyear) +
+                    (1|year) +
                     (1|litter_id) +
                     (1|dam_id),
                   data = dat)
@@ -98,6 +98,7 @@ survival_to_autumn = glmer(made_it ~
                              oft1*mis1*grid_density + 
                              growth_sc*grid_density +
                              part_sc*grid_density +
+                             mastyear +
                              (1|year) +
                              (1|dam_id) + 
                              (1|litter_id), 
@@ -124,6 +125,7 @@ survival_to_200d = glmer(survived_200d ~
                            oft1*mis1*grid_density + 
                            growth_sc*grid_density + 
                            part_sc*grid_density +
+                           mastyear +
                            (1|year) +
                            (1|dam_id) + 
                            (1|litter_id),
