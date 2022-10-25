@@ -143,3 +143,8 @@ residuals(simulationOutput, quantileFunction = qnorm)
 plot(simulationOutput)
 # Theres some wonkiness here with one of the random effects deviating
 # But it seems to not be a massive issue
+
+icc(survival_to_autumn, by_group = T, tolerance = 0)
+icc(survival_to_200d, by_group = T, tolerance = 0)
+vif(survival_to_autumn)
+vif(survival_to_200d)

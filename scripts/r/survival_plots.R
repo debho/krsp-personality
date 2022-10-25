@@ -79,7 +79,8 @@ survival_200d_oft_fig <- ggplot(survival_residuals,
   scale_color_paletteer_d("ggprism::plasma") + 
   labs(x = "Activity",
        y = "Probability of survival to 200 days",
-       col = "Grid density (Spring)")
+       col = "Grid density (Spring)",
+       tag = "c.")
 plot(survival_200d_oft_fig)
 
 survival_200d_mast_fig <- ggplot(survival_residuals,
@@ -98,8 +99,9 @@ survival_200d_mast_fig <- ggplot(survival_residuals,
 plot(survival_200d_mast_fig)
 
 ggsave("figures/survival~oftmis.png",
-       grid.arrange(survival_autumn_oftmis_fig,
-                    survival_200d_oftmis_fig,
+       grid.arrange(arrangeGrob(survival_autumn_oftmis_fig,
+                                survival_200d_oftmis_fig),
+                    survival_200d_oft_fig,
                     ncol = 2,
                     nrow = 1))
 ggsave("figures/survival~mast.png",
