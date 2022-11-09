@@ -17,6 +17,46 @@ survival_residuals <- dat %>%
          binned_mis1 = factor(cut_interval(mis1, n = 2),
                               labels = c("low", "high")))
 
+# SURVIVAL ~ MAST YEAR ####
+survival_autumn_mast_fig <- ggplot(survival_residuals,
+                                   aes(mastyear, made_it, fill = mastyear)) +
+  theme_classic() +
+  labs_pubr() +
+  geom_jitter(aes(col = year)) +
+  scale_color_paletteer_d("ggprism::viridis") + 
+  geom_violin(alpha = 0.8) +
+  geom_boxplot(alpha = 0.3) +
+  scale_fill_paletteer_d("ggprism::pastels") +
+  labs(x = "Mast Year",
+       y = "Probability of survival to autumn",
+       col = "Year",
+       fill = "Mast Year",
+       tag = "a.")
+plot(survival_autumn_mast_fig)
+
+survival_200d_mast_fig <- ggplot(survival_residuals,
+                                 aes(mastyear, survived_200d, fill = mastyear)) +
+  theme_classic() +
+  labs_pubr() +
+  geom_jitter(aes(col = year)) +
+  scale_color_paletteer_d("ggprism::viridis") + 
+  geom_violin(alpha = 0.8) +
+  geom_boxplot(alpha = 0.3) +
+  scale_fill_paletteer_d("ggprism::pastels") +
+  labs(x = "Mast Year",
+       y = "Probability of overwinter survival",
+       col = "Year",
+       fill = "Mast Year",
+       tag = "b.")
+plot(survival_200d_mast_fig)
+
+ggsave("figures/survival~mast.png",
+       grid.arrange(survival_autumn_mast_fig,
+                    survival_200d_mast_fig,
+                    ncol = 2,
+                    nrow = 1))
+
+# SURVIVAL ~ PERSONALITY ####
 survival_autumn_oftmis_fig <- ggplot(survival_residuals,
                                   aes(oft1, made_it, col = binned_mis1)) +
   theme_classic() +
@@ -34,20 +74,14 @@ survival_autumn_oftmis_fig <- ggplot(survival_residuals,
        tag = "a.") 
 plot(survival_autumn_oftmis_fig)
 
-survival_autumn_mast_fig <- ggplot(survival_residuals,
-                                 aes(mastyear, made_it, fill = mastyear)) +
-  theme_classic() +
-  labs_pubr() +
-  geom_jitter(aes(col = year)) +
-  scale_color_paletteer_d("ggprism::viridis") + 
-  geom_violin(alpha = 0.8) +
-  scale_fill_paletteer_d("ggprism::pastels") +
-  labs(x = "Mast Year",
-       y = "Probability of survival to autumn",
-       col = "Year",
-       fill = "Mast Year",
-       tag = "a.")
-plot(survival_autumn_mast_fig)
+autumn_personality <- gam(made_it ~ te(oft1) + te(mis1) +
+                            te(oft1, mis1), data = personality)
+vis.gam(autumn_personality,
+        plot.type = "contour",
+        color = "heat",
+        main = "Effects of personality traits on survival to autumn",
+        xlab = "Activity",
+        ylab = "Aggression")
 
 survival_200d_oftmis_fig <- ggplot(survival_residuals,
                                 aes(oft1, survived_200d, col = binned_mis1)) +
@@ -61,11 +95,11 @@ survival_200d_oftmis_fig <- ggplot(survival_residuals,
               method.args = list(family = binomial)) +
   scale_color_paletteer_d("ggprism::viridis") + 
   labs(x = "Activity",
-       y = "Probability of survival to 200 days",
-       col = "Aggression",
+       y = "Probability of overwinter survival",
        tag = "b.")
 plot(survival_200d_oftmis_fig)
 
+# SURVIVAL ~ PERSONALITY x DENSITY ####
 survival_200d_oft_fig <- ggplot(survival_residuals,
                                   aes(oft1, survived_200d, col = binned_density)) +
   theme_classic() +
@@ -78,35 +112,15 @@ survival_200d_oft_fig <- ggplot(survival_residuals,
               method.args = list(family = binomial)) +
   scale_color_paletteer_d("ggprism::plasma") + 
   labs(x = "Activity",
-       y = "Probability of survival to 200 days",
+       y = "Probability of overwinter survival",
        col = "Grid density (Spring)",
        tag = "c.")
 plot(survival_200d_oft_fig)
 
-survival_200d_mast_fig <- ggplot(survival_residuals,
-                                  aes(mastyear, survived_200d, fill = mastyear)) +
-  theme_classic() +
-  labs_pubr() +
-  geom_jitter(aes(col = year)) +
-  scale_color_paletteer_d("ggprism::viridis") + 
-  geom_violin(alpha = 0.8) +
-  scale_fill_paletteer_d("ggprism::pastels") +
-  labs(x = "Mast Year",
-       y = "Probability of survival to 200 days",
-       col = "Year",
-       fill = "Mast Year",
-       tag = "b.")
-plot(survival_200d_mast_fig)
-
 ggsave("figures/survival~oftmis.png",
-       grid.arrange(arrangeGrob(survival_autumn_oftmis_fig,
-                                survival_200d_oftmis_fig),
-                    survival_200d_oft_fig,
+       grid.arrange(survival_autumn_oftmis_fig,
+                    survival_200d_oftmis_fig,
                     ncol = 2,
                     nrow = 1))
-ggsave("figures/survival~mast.png",
-       grid.arrange(survival_autumn_mast_fig,
-                    survival_200d_mast_fig,
-                    ncol = 2,
-                    nrow = 1))
+
        
