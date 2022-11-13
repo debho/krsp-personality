@@ -77,6 +77,7 @@ vis.gam(overwinter_personality,
         xlab = "Activity",
         ylab = "Aggression",
         zlab = "Probability of surviving overwinter")
+
 ggsave("figures/survival~personality.png")
 
 # SURVIVAL ~ PERSONALITY x DENSITY ####
@@ -121,31 +122,5 @@ vis.gam(overwinter_aggression,
         xlab = "Aggression",
         ylab = "Density",
         zlab = "Probability of survival overwinter")
+
 ggsave("figures/survival~density.png")
-
-survival_200d_oft_fig <- ggplot(survival_residuals,
-                                  aes(oft1, survived_200d, col = binned_density)) +
-  theme_classic() +
-  labs_pubr() +
-  geom_point(size = 3,
-             alpha = 0.5) +
-  stat_smooth(aes(color = binned_density),
-              method = "glm",
-              se = F,
-              method.args = list(family = binomial)) +
-  scale_color_paletteer_d("ggprism::plasma") + 
-  labs(x = "Activity",
-       y = "Probability of overwinter survival",
-       col = "Grid density (Spring)",
-       tag = "c.")
-plot(survival_200d_oft_fig)
-
-ggsave("figures/survival~density.png",
-       grid.arrange(autumn_activity,
-                    autumn_aggression,
-                    overwinter_activity,
-                    overwinter_aggression,
-                    ncol = 2,
-                    nrow = 2))
-
-       
