@@ -3,6 +3,7 @@ library(paletteer)
 library(gtools)
 library(gridExtra)
 library(ggpubr)
+library(mgcv)
 
 survival_residuals <- dat %>%
   filter(!is.na(growth_sc)) %>%
@@ -57,49 +58,71 @@ ggsave("figures/survival~mast.png",
                     nrow = 1))
 
 # SURVIVAL ~ PERSONALITY ####
-survival_autumn_oftmis_fig <- ggplot(survival_residuals,
-                                  aes(oft1, made_it, col = binned_mis1)) +
-  theme_classic() +
-  labs_pubr() +
-  geom_point(size = 3,
-             alpha = 0.5) +
-  stat_smooth(aes(color = binned_mis1),
-              method = "glm",
-              se = F,
-              method.args = list(family = binomial)) +
-  scale_color_paletteer_d("ggprism::viridis") + 
-  labs(x = "Activity",
-       y = "Probability of survival to autumn",
-       col = "Aggression",
-       tag = "a.") 
-plot(survival_autumn_oftmis_fig)
-
-autumn_personality <- gam(made_it ~ te(oft1) + te(mis1) +
-                            te(oft1, mis1), data = personality)
+par(mfrow = c(1, 2))
+autumn_personality <- gam(made_it ~ te(oft1, mis1), data = survival_residuals)
+overwinter_personality <- gam(survived_200d ~ te(oft1, mis1), data = personality)
 vis.gam(autumn_personality,
-        plot.type = "contour",
+        plot.type = "persp",
         color = "heat",
-        main = "Effects of personality traits on survival to autumn",
+        theta = 135,
+        main = "(a.) Effect of personality traits on survival to autumn",
         xlab = "Activity",
-        ylab = "Aggression")
-
-survival_200d_oftmis_fig <- ggplot(survival_residuals,
-                                aes(oft1, survived_200d, col = binned_mis1)) +
-  theme_classic() +
-  labs_pubr() +
-  geom_point(size = 3,
-             alpha = 0.5) +
-  stat_smooth(aes(color = binned_mis1),
-              method = "glm",
-              se = F,
-              method.args = list(family = binomial)) +
-  scale_color_paletteer_d("ggprism::viridis") + 
-  labs(x = "Activity",
-       y = "Probability of overwinter survival",
-       tag = "b.")
-plot(survival_200d_oftmis_fig)
+        ylab = "Aggression",
+        zlab = "Probability of survival to autumn")
+vis.gam(overwinter_personality,
+        plot.type = "persp",
+        color = "heat",
+        theta = 135,
+        main = "(b.) Effect of personality traits on survival overwinter",
+        xlab = "Activity",
+        ylab = "Aggression",
+        zlab = "Probability of surviving overwinter")
+ggsave("figures/survival~personality.png")
 
 # SURVIVAL ~ PERSONALITY x DENSITY ####
+par(mfrow = c(2, 2))
+autumn_activity <- gam(made_it ~
+                         te(oft1, grid_density), data = personality)
+autumn_aggression <- gam(made_it ~
+                           te(mis1, grid_density), data = personality)
+overwinter_activity <- gam(survived_200d ~
+                             te(oft1, grid_density), data = personality)
+overwinter_aggression <- gam(survived_200d ~
+                               te(mis1, grid_density), data = personality)
+vis.gam(autumn_activity,
+        plot.type = "persp",
+        color = "heat",
+        theta = 135,
+        main = "(a.) Effect of activity and density on survival to autumn",
+        xlab = "Activity",
+        ylab = "Density",
+        zlab = "Probability of survival to autumn")
+vis.gam(overwinter_activity,
+        plot.type = "persp",
+        color = "heat",
+        theta = 135,
+        main = "(c.) Effect of activity and density on survival overwinter",
+        xlab = "Activity",
+        ylab = "Density",
+        zlab = "Probability of survival overwinter")
+vis.gam(autumn_aggression,
+        plot.type = "persp",
+        color = "heat",
+        theta = 135,
+        main = "(b.) Effect of aggression and density on survival to autumn",
+        xlab = "Aggression",
+        ylab = "Density",
+        zlab = "Probability of survival to autumn")
+vis.gam(overwinter_aggression,
+        plot.type = "persp",
+        color = "heat",
+        theta = 135,
+        main = "(d.) Effect of aggression and density on survival overwinter",
+        xlab = "Aggression",
+        ylab = "Density",
+        zlab = "Probability of survival overwinter")
+ggsave("figures/survival~density.png")
+
 survival_200d_oft_fig <- ggplot(survival_residuals,
                                   aes(oft1, survived_200d, col = binned_density)) +
   theme_classic() +
@@ -117,10 +140,12 @@ survival_200d_oft_fig <- ggplot(survival_residuals,
        tag = "c.")
 plot(survival_200d_oft_fig)
 
-ggsave("figures/survival~oftmis.png",
-       grid.arrange(survival_autumn_oftmis_fig,
-                    survival_200d_oftmis_fig,
+ggsave("figures/survival~density.png",
+       grid.arrange(autumn_activity,
+                    autumn_aggression,
+                    overwinter_activity,
+                    overwinter_aggression,
                     ncol = 2,
-                    nrow = 1))
+                    nrow = 2))
 
        
