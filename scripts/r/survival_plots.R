@@ -19,7 +19,7 @@ survival_residuals <- dat %>%
                               labels = c("low", "high")))
 
 # SURVIVAL ~ MAST YEAR ####
-survival_autumn_mast_fig <- ggplot(survival_residuals,
+survival_autumn_mast_fig <- ggplot(dat,
                                    aes(mastyear, made_it, fill = mastyear)) +
   theme_classic() +
   labs_pubr() +
@@ -35,7 +35,7 @@ survival_autumn_mast_fig <- ggplot(survival_residuals,
        tag = "a.")
 plot(survival_autumn_mast_fig)
 
-survival_200d_mast_fig <- ggplot(survival_residuals,
+survival_200d_mast_fig <- ggplot(dat,
                                  aes(mastyear, survived_200d, fill = mastyear)) +
   theme_classic() +
   labs_pubr() +
@@ -59,13 +59,14 @@ ggsave("figures/survival~mast.png",
 
 # SURVIVAL ~ PERSONALITY ####
 par(mfrow = c(1, 2))
-autumn_personality <- gam(made_it ~ te(oft1, mis1), data = survival_residuals)
-overwinter_personality <- gam(survived_200d ~ te(oft1, mis1), data = personality)
+autumn_personality <- gam(made_it ~ te(oft1, mis1), data = dat)
+overwinter_personality <- gam(survived_200d ~ te(oft1, mis1), data = dat)
 vis.gam(autumn_personality,
         plot.type = "persp",
         color = "heat",
         theta = 135,
-        main = "(a.) Effect of personality traits on survival to autumn",
+        main = "(a.)",
+        ticktype = "detailed",
         xlab = "Activity",
         ylab = "Aggression",
         zlab = "Probability of survival to autumn")
@@ -73,7 +74,8 @@ vis.gam(overwinter_personality,
         plot.type = "persp",
         color = "heat",
         theta = 135,
-        main = "(b.) Effect of personality traits on survival overwinter",
+        main = "(b.)",
+        ticktype = "detailed",
         xlab = "Activity",
         ylab = "Aggression",
         zlab = "Probability of surviving overwinter")
@@ -83,18 +85,19 @@ ggsave("figures/survival~personality.png")
 # SURVIVAL ~ PERSONALITY x DENSITY ####
 par(mfrow = c(2, 2))
 autumn_activity <- gam(made_it ~
-                         te(oft1, grid_density), data = personality)
+                         te(oft1, grid_density), data = dat)
 autumn_aggression <- gam(made_it ~
-                           te(mis1, grid_density), data = personality)
+                           te(mis1, grid_density), data = dat)
 overwinter_activity <- gam(survived_200d ~
-                             te(oft1, grid_density), data = personality)
+                             te(oft1, grid_density), data = dat)
 overwinter_aggression <- gam(survived_200d ~
-                               te(mis1, grid_density), data = personality)
+                               te(mis1, grid_density), data = dat)
 vis.gam(autumn_activity,
         plot.type = "persp",
         color = "heat",
         theta = 135,
-        main = "(a.) Effect of activity and density on survival to autumn",
+        main = "(a.)",
+        ticktype = "detailed",
         xlab = "Activity",
         ylab = "Density",
         zlab = "Probability of survival to autumn")
@@ -102,7 +105,8 @@ vis.gam(overwinter_activity,
         plot.type = "persp",
         color = "heat",
         theta = 135,
-        main = "(c.) Effect of activity and density on survival overwinter",
+        main = "(c.)",
+        ticktype = "detailed",
         xlab = "Activity",
         ylab = "Density",
         zlab = "Probability of survival overwinter")
@@ -110,7 +114,8 @@ vis.gam(autumn_aggression,
         plot.type = "persp",
         color = "heat",
         theta = 135,
-        main = "(b.) Effect of aggression and density on survival to autumn",
+        main = "(b.)",
+        ticktype = "detailed",
         xlab = "Aggression",
         ylab = "Density",
         zlab = "Probability of survival to autumn")
@@ -118,7 +123,8 @@ vis.gam(overwinter_aggression,
         plot.type = "persp",
         color = "heat",
         theta = 135,
-        main = "(d.) Effect of aggression and density on survival overwinter",
+        main = "(d.)",
+        ticktype = "detailed",
         xlab = "Aggression",
         ylab = "Density",
         zlab = "Probability of survival overwinter")
