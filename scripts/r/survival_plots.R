@@ -86,7 +86,7 @@ vis.gam(autumn_activity,
         ticktype = "detailed",
         xlab = "Activity",
         ylab = "Density",
-        zlab = "Probability of survival to autumn")
+        zlab = "Probability of survival to autumn") 
 vis.gam(overwinter_activity,
         plot.type = "persp",
         color = "heat",
@@ -116,9 +116,47 @@ vis.gam(overwinter_aggression,
         zlab = "Probability of survival overwinter")
 
 # SCATTERPLOTS WITH LINES
-visreg(survival_to_autumn, "mis1", by = "oft1", gg = T, overlay = T)
-visreg(survival_to_200d, "mis1", by = "oft1", gg = T, overlay = T)
-visreg(survival_to_autumn, "oft1", by = "grid_density", gg = T, overlay = T)
-visreg(survival_to_200d, "oft1", by = "grid_density", gg = T, overlay = T)
-visreg(survival_to_autumn, "mis1", by = "grid_density", gg = T, overlay = T)
-visreg(survival_to_200d, "mis1", by = "grid_density", gg = T, overlay = T)
+# oft x mis interactions
+visreg(survival_to_autumn,
+       "mis1", by = "oft1",
+       gg = T, overlay = T,
+       xlab = "Aggression",
+       ylab = "Probability of survival to autumn") +
+  theme_bw() +
+  labs_pubr()
+visreg(survival_to_200d,
+       "mis1", by = "oft1",
+       gg = T, overlay = T,
+       xlab = "Aggression",
+       ylab = "Probability of survival overwinter") +
+  theme_bw() +
+  labs_pubr()
+# personality x density interactions
+visreg(survival_to_autumn,
+       "oft1", by = "grid_density",
+       gg = T, overlay = T,
+       xlab = "Activity",
+       ylab = "Probability of survival to autumn") +
+  theme_bw() +
+  labs_pubr()
+visreg(survival_to_200d,
+       "oft1", by = "grid_density",
+       gg = T, overlay = T,
+       xlab = "Activity",
+       ylab = "Probability of survival overwinter") +
+  theme_bw() +
+  labs_pubr()
+visreg(survival_to_autumn,
+       "mis1", by = "grid_density",
+       gg = T, overlay = T,
+       xlab = "Aggression",
+       ylab = "Probability of survival to autumn") +
+  theme_bw() +
+  labs_pubr()
+visreg(survival_to_200d,
+       "mis1",by = "grid_density",
+       gg = T, overlay = T,
+       xlab = "Aggression",
+       ylab = "Probability of survival overwinter") +
+  theme_bw() +
+  labs_pubr()

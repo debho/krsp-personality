@@ -131,7 +131,7 @@ survival_to_200d = glmer(survived_200d ~
                            (1|year) +
                            (1|dam_id) + 
                            (1|litter_id),
-                         data = dat2,
+                         data = dat,
                          na.action = 'na.omit',
                          family = 'binomial',
                          control = glmerControl(optimizer = "bobyqa", optCtrl = list(maxfun = 1e8)))
