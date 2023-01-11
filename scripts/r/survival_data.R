@@ -52,8 +52,7 @@ personality = tbl(con, 'flastall2') %>%
            TRUE ~ FALSE
          ),
          nest_days = as.numeric(difftime(n2_date, fieldBDate, units = 'days')),
-         growth = (n2_weight - n1_weight)/nest_days,
-         gridyear = as.factor(paste(grid, year)))
+         growth = (n2_weight - n1_weight)/nest_days)
 
 # Well also pull in grid densities here as well
 query = read_file('scripts/sql/grid_density.sql')

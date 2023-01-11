@@ -60,10 +60,12 @@ personality$mis1 = unlist(mis1 * -1)
 
 # scale personality and growth rate by gridyear 
 personality <- personality %>%
-  mutate(oft1 = scale_by(oft1 ~ gridyear),
-         mis1 = scale_by(mis1 ~ gridyear),
-         grid_density = scale(grid_density, scale = T, center = T),
-         age_sc = scale(age_at_trial, scale = T, center = T))
+  mutate(grid_density = scale(grid_density, scale = T, center = T)[,1],
+         age_sc = scale(age_at_trial, scale = T, center = T)[,1]) %>%
+  group_by(grid, year) %>%
+  mutate(oft1 = scale(oft1, scale = T, center = T)[,1],
+         mis1 = scale(mis1, scale = T, center = T)[,1]) %>%
+  ungroup()
 
 # Factors that may influence personality ----------------------------------
 oft_indiv <- lmer(oft1 ~

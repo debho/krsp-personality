@@ -4,19 +4,7 @@ library(gtools)
 library(gridExtra)
 library(ggpubr)
 library(mgcv)
-
-survival_residuals <- dat %>%
-  filter(!is.na(growth_sc)) %>%
-  mutate(survival_to_autumn_res = scale(predict(survival_to_autumn)),
-         survival_to_200d_res = scale(predict(survival_to_200d)), 
-         mastyear = factor(mastyear,
-                           labels = c("non-mast year", "mast year")),
-         binned_density = factor(cut_interval(grid_density, n = 2),
-                                 labels = c("low", "high")),
-         binned_oft1 = factor(cut_interval(oft1, n = 2),
-                              labels = c("low", "high")),
-         binned_mis1 = factor(cut_interval(mis1, n = 2),
-                              labels = c("low", "high")))
+library(visreg)
 
 # SURVIVAL ~ MAST YEAR ####
 survival_autumn_mast_fig <- ggplot(dat,
@@ -80,8 +68,6 @@ vis.gam(overwinter_personality,
         ylab = "Aggression",
         zlab = "Probability of surviving overwinter")
 
-ggsave("figures/survival~personality.png")
-
 # SURVIVAL ~ PERSONALITY x DENSITY ####
 par(mfrow = c(2, 2))
 autumn_activity <- gam(made_it ~
@@ -129,4 +115,10 @@ vis.gam(overwinter_aggression,
         ylab = "Density",
         zlab = "Probability of survival overwinter")
 
-ggsave("figures/survival~density.png")
+# SCATTERPLOTS WITH LINES
+visreg(survival_to_autumn, "mis1", by = "oft1", gg = T, overlay = T)
+visreg(survival_to_200d, "mis1", by = "oft1", gg = T, overlay = T)
+visreg(survival_to_autumn, "oft1", by = "grid_density", gg = T, overlay = T)
+visreg(survival_to_200d, "oft1", by = "grid_density", gg = T, overlay = T)
+visreg(survival_to_autumn, "mis1", by = "grid_density", gg = T, overlay = T)
+visreg(survival_to_200d, "mis1", by = "grid_density", gg = T, overlay = T)
