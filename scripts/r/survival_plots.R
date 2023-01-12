@@ -121,7 +121,7 @@ visreg(survival_to_autumn,
        "mis1", by = "oft1",
        gg = T, overlay = T,
        xlab = "Aggression",
-       ylab = "Probability of survival to autumn") +
+       ylab = "Probability of survival to autumn") +s
   theme_bw() +
   labs_pubr()
 visreg(survival_to_200d,
