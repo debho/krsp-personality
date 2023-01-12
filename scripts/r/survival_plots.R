@@ -116,47 +116,124 @@ vis.gam(overwinter_aggression,
         zlab = "Probability of survival overwinter")
 
 # SCATTERPLOTS WITH LINES
+dat$Activity <- cut(dat$oft1, 3,
+                      labels = c("Low Activity", "Medium Activity", "High Activity"))
+dat$Density <- cut(dat$grid_density, 3,
+                   c("Low Density", "Medium Density", "High Density"))
 # oft x mis interactions
-visreg(survival_to_autumn,
-       "mis1", by = "oft1",
-       gg = T, overlay = T,
-       xlab = "Aggression",
-       ylab = "Probability of survival to autumn") +s
+autumn_personality_scatter <- glmer(made_it ~
+                                   mis1*Activity +
+                                   (1|year) +
+                                   (1|dam_id) +
+                                   (1|litter_id),
+                                 data = dat,
+                                 na.action = 'na.omit',
+                                 family = binomial(link = "logit"),
+                                 control = glmerControl(optimizer = "bobyqa", optCtrl = list(maxfun = 1e8)))
+overwinter_personality_scatter <- glmer(survived_200d ~
+                                  mis1*Activity +
+                                  (1|year) +
+                                  (1|dam_id) +
+                                  (1|litter_id),
+                                data = dat,
+                                na.action = 'na.omit',
+                                family = 'binomial',
+                                control = glmerControl(optimizer = "bobyqa", optCtrl = list(maxfun = 1e8)))
+autumn_personality_scatter_fig <- visreg(autumn_personality_scatter,
+                                         "mis1", by = "Activity",
+                                         gg = T, overlay = T,
+                                         xlab = "Aggression",
+                                         ylab = "Probability of survival to autumn") +
   theme_bw() +
   labs_pubr()
-visreg(survival_to_200d,
-       "mis1", by = "oft1",
-       gg = T, overlay = T,
-       xlab = "Aggression",
-       ylab = "Probability of survival overwinter") +
+overwinter_personality_scatter_fig <- visreg(overwinter_personality_scatter,
+                                             "mis1", by = "Activity",
+                                             gg = T, overlay = T,
+                                             xlab = "Aggression",
+                                             ylab = "Probability of survival to autumn") +
   theme_bw() +
   labs_pubr()
+
+car::Anova(autumn_personality_scatter)
+car::Anova(overwinter_personality_scatter)
+summary(autumn_personality_scatter)
+summary(overwinter_personality_scatter)
+
+ggsave("figures/survival~personalitySCATTER.png",
+       grid.arrange(autumn_personality_scatter_fig,
+                    overwinter_personality_scatter_fig,
+                    ncol = 2,
+                    nrow = 1))
 # personality x density interactions
-visreg(survival_to_autumn,
-       "oft1", by = "grid_density",
-       gg = T, overlay = T,
-       xlab = "Activity",
-       ylab = "Probability of survival to autumn") +
+autumn_activity_scatter <- glmer(made_it ~
+                                   oft1*Density + 
+                                   (1|year) +
+                                   (1|dam_id) + 
+                                   (1|litter_id), 
+                                 data = dat,
+                                 na.action = 'na.omit',
+                                 family = binomial(link = "logit"),
+                                 control = glmerControl(optimizer = "bobyqa", optCtrl = list(maxfun = 1e8)))
+overwinter_activity_scatter <- glmer(survived_200d ~ 
+                                       oft1*Density + 
+                                       (1|year) +
+                                       (1|dam_id) + 
+                                       (1|litter_id),
+                                     data = dat,
+                                     na.action = 'na.omit',
+                                     family = 'binomial',
+                                     control = glmerControl(optimizer = "bobyqa", optCtrl = list(maxfun = 1e8)))
+autumn_activity_scatter_fig <- visreg(autumn_activity_scatter,
+                                      "oft1", by = "Density",
+                                      gg = T, overlay = T,
+                                      xlab = "Activity",
+                                      ylab = "Probability of survival to autumn") +
   theme_bw() +
   labs_pubr()
-visreg(survival_to_200d,
-       "oft1", by = "grid_density",
+overwinter_activity_scatter_fig <- visreg(overwinter_activity_scatter,
+       "oft1", by = "Density",
        gg = T, overlay = T,
        xlab = "Activity",
        ylab = "Probability of survival overwinter") +
   theme_bw() +
   labs_pubr()
-visreg(survival_to_autumn,
-       "mis1", by = "grid_density",
+autumn_aggression_scatter <- glmer(made_it ~
+                                   mis1*Density + 
+                                   (1|year) +
+                                   (1|dam_id) + 
+                                   (1|litter_id), 
+                                 data = dat,
+                                 na.action = 'na.omit',
+                                 family = binomial(link = "logit"),
+                                 control = glmerControl(optimizer = "bobyqa", optCtrl = list(maxfun = 1e8)))
+overwinter_aggression_scatter <- glmer(survived_200d ~ 
+                                       mis1*Density + 
+                                       (1|year) +
+                                       (1|dam_id) + 
+                                       (1|litter_id),
+                                     data = dat,
+                                     na.action = 'na.omit',
+                                     family = 'binomial',
+                                     control = glmerControl(optimizer = "bobyqa", optCtrl = list(maxfun = 1e8)))
+autumn_aggression_scatter_fig <- visreg(autumn_aggression_scatter,
+       "mis1", by = "Density",
        gg = T, overlay = T,
        xlab = "Aggression",
        ylab = "Probability of survival to autumn") +
   theme_bw() +
   labs_pubr()
-visreg(survival_to_200d,
-       "mis1",by = "grid_density",
+overwinter_aggression_scatter_fig <- visreg(overwinter_aggression_scatter,
+       "mis1",by = "Density",
        gg = T, overlay = T,
        xlab = "Aggression",
        ylab = "Probability of survival overwinter") +
   theme_bw() +
   labs_pubr()
+
+ggsave("figures/survival~densitySCATTER.png",
+       grid.arrange(autumn_activity_scatter_fig,
+                    overwinter_activity_scatter_fig,
+                    autumn_aggression_scatter_fig,
+                    overwinter_aggression_scatter_fig,
+                    ncol = 2,
+                    nrow = 2))
