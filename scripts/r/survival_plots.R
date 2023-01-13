@@ -155,14 +155,23 @@ autumn_personality_scatter_fig <- visreg(autumn_personality_scatter,
                                          "mis1", by = "Activity",
                                          gg = T, overlay = T,
                                          xlab = "Aggression",
-                                         ylab = "Probability of survival to autumn") +
+                                         ylab = "Probability of survival to autumn",
+                                         point = list(alpha = 0.5),
+                                         fill = list(alpha = 0)) +
+  scale_color_paletteer_d("ggprism::inferno") +
+  scale_fill_paletteer_d("ggprism::inferno") +
   theme_bw() +
   labs_pubr()
+
 overwinter_personality_scatter_fig <- visreg(overwinter_personality_scatter,
                                              "mis1", by = "Activity",
                                              gg = T, overlay = T,
                                              xlab = "Aggression",
-                                             ylab = "Probability of survival to autumn") +
+                                             ylab = "Probability of survival to autumn",
+                                             point = list(alpha = 0.5),
+                                             fill = list(alpha = 0)) +
+  scale_color_paletteer_d("ggprism::floral") +
+  scale_fill_paletteer_d("ggprism::floral") +
   theme_bw() +
   labs_pubr()
 
