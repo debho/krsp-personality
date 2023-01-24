@@ -262,3 +262,4 @@ ggsave("figures/survival~densitySCATTER.png",
                     overwinter_aggression_scatter_fig,
                     ncol = 2,
                     nrow = 2))
+
