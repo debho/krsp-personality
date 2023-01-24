@@ -11,6 +11,7 @@ library(Matrix)
 library(standardize)
 library(ade4)
 library(lubridate)
+library(performance)
 
 personality = read_csv('data/personality-mrw-survival.csv', show_col_types = FALSE) %>% 
   mutate(survival = as.integer(survived_200d)) %>% 
@@ -102,7 +103,6 @@ survival_to_autumn = glmer(made_it ~
                              part_sc*grid_density +
                              mastyear +
                              (1|year) +
-                             (1|dam_id) + 
                              (1|litter_id), 
                            data = dat,
                            na.action = 'na.omit',
@@ -129,7 +129,6 @@ survival_to_200d = glmer(survived_200d ~
                            part_sc*grid_density +
                            mastyear +
                            (1|year) +
-                           (1|dam_id) + 
                            (1|litter_id),
                          data = dat,
                          na.action = 'na.omit',
