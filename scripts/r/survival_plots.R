@@ -144,7 +144,7 @@ autumn_personality_scatter_fig <- visreg(survival_to_autumn,
   labs(color = "Activity",
        fill = "Activity") +
   theme_classic() +
-  labs_pubr()
+  labs_pubr() 
 
 overwinter_personality_scatter_fig <- visreg(survival_to_200d,
                                              "mis1", by = "oft1",

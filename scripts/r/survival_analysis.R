@@ -6,8 +6,8 @@ options(tidyverse.quiet = TRUE)
 library(tidyverse)
 library(lme4)
 library(car)
-library(DHARMa)
 library(Matrix)
+library(DHARMa)
 library(standardize)
 library(ade4)
 library(lubridate)
@@ -62,9 +62,13 @@ personality$mis1 = unlist(mis1 * -1)
 # scale personality and growth rate by gridyear 
 personality <- personality %>%
   mutate(grid_density = scale(grid_density, scale = T, center = T)[,1],
-         age_sc = scale(age_at_trial, scale = T, center = T)[,1],
-         oft1 = scale(oft1, scale = T, center = T)[,1],
-         mis1 = scale(mis1, scale = T, center = T)[,1])
+         age_sc = scale(age_at_trial, scale = T, center = T)[,1]) %>%
+  group_by(grid, year) %>%
+  mutate(oft1 = scale(oft1, scale = T, center = T)[,1],
+         mis1 = scale(mis1, scale = T, center = T)[,1]) %>%
+  ungroup() %>%
+  mutate(treatment = factor(treatment))
+  
 
 # Factors that may influence personality ----------------------------------
 oft_indiv <- lmer(oft1 ~
@@ -73,6 +77,7 @@ oft_indiv <- lmer(oft1 ~
                     growth_sc*grid_density +
                     part_sc*grid_density +
                     mastyear +
+                    treatment +
                     (1|year) +
                     (1|litter_id),
                   data = dat)
@@ -84,6 +89,7 @@ mis_indiv <- lmer(mis1 ~
                     growth_sc*grid_density +
                     part_sc*grid_density +
                     mastyear +
+                    treatment +
                     (1|year) +
                     (1|litter_id),
                   data = dat)
@@ -98,6 +104,7 @@ survival_to_autumn = glmer(made_it ~
                              growth_sc*grid_density +
                              part_sc*grid_density +
                              mastyear +
+                             treatment +
                              (1|year) +
                              (1|litter_id), 
                            data = dat,
@@ -124,6 +131,7 @@ survival_to_200d = glmer(survived_200d ~
                            growth_sc*grid_density + 
                            part_sc*grid_density +
                            mastyear +
+                           treatment +
                            (1|year) +
                            (1|litter_id),
                          data = dat,
