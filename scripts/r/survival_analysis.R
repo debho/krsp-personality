@@ -4,6 +4,7 @@
 # Analysis of survival
 options(tidyverse.quiet = TRUE)
 library(tidyverse)
+library(tidylog)
 library(lme4)
 library(car)
 library(Matrix)
@@ -12,6 +13,7 @@ library(standardize)
 library(ade4)
 library(lubridate)
 library(performance)
+
 
 personality = read_csv('data/personality-mrw-survival.csv', show_col_types = FALSE) %>% 
   mutate(survival = as.integer(survived_200d)) %>% 
@@ -100,8 +102,9 @@ dat = personality %>%
   mutate(across(c(year, dam_id, litter_id, grid, mastyear), as_factor)) 
 
 survival_to_autumn = glmer(made_it ~
-                             oft1*mis1*grid_density + 
-                             growth_sc*grid_density +
+                             oft1*mis1*grid_density +
+                             oft1*growth_sc*grid_density +
+                             mis1*growth_sc*grid_density +
                              part_sc*grid_density +
                              mastyear +
                              treatment +
@@ -127,14 +130,15 @@ dat2 = personality %>%
   mutate(across(c(year, dam_id, litter_id, grid, mastyear), as_factor))
 
 survival_to_200d = glmer(survived_200d ~ 
-                           oft1*mis1*grid_density + 
-                           growth_sc*grid_density + 
+                           oft1*mis1*grid_density +
+                           oft1*growth_sc*grid_density +
+                           mis1*growth_sc*grid_density +
                            part_sc*grid_density +
                            mastyear +
                            treatment +
                            (1|year) +
                            (1|litter_id),
-                         data = dat,
+                         data = dat2,
                          na.action = 'na.omit',
                          family = 'binomial',
                          control = glmerControl(optimizer = "bobyqa", optCtrl = list(maxfun = 1e8)))

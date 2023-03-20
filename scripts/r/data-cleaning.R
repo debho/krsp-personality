@@ -34,7 +34,7 @@ personality = read_csv('data/personality-master-updated.csv', show_col_types = F
          proceed_with_caution == "N",
          !observer == "SWK", # remove due to GC experiment
          trialnumber == 1, # take only trial 1 for each individual
-         grid %in% c("KL", "SU", "JO", "AG")) %>% # only unmanipulated grids
+         grid %in% c("KL", "SU", "JO", "")) %>% # no BT bc no grid density data
   group_by(sq_id, year) %>%
   select(squirrel_id = sq_id
          , sex

@@ -69,15 +69,13 @@ personality <- personality %>%
 
 # Write the new file
 personality = left_join(personality, grids_density, by = c("grid", "year")) %>%
-  filter(grid %in% c("KL", "SU", "JO", "AG")) %>%
+  filter(grid %in% c("KL", "SU", "JO")) %>%
   mutate(survived_200d = as.numeric(survived_200d),
          treatment = factor(case_when((grid == "KL" |
                                          grid == "SU") ~
                                                "control",
                                       grid == "JO" ~
-                                        "rattle",
-                                      grid == "AG" ~
-                                        "food-add")))
+                                        "rattle")))
 
 write_csv(personality, file = 'data/personality-mrw-survival.csv')
 
