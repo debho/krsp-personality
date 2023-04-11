@@ -103,9 +103,8 @@ dat = personality %>%
 
 survival_to_autumn = glmer(made_it ~
                              oft1*mis1*grid_density +
-                             oft1*growth_sc*grid_density +
-                             mis1*growth_sc*grid_density +
                              part_sc*grid_density +
+                             growth_sc*grid_density +
                              mastyear +
                              treatment +
                              (1|year) +
@@ -131,9 +130,8 @@ dat2 = personality %>%
 
 survival_to_200d = glmer(survived_200d ~ 
                            oft1*mis1*grid_density +
-                           oft1*growth_sc*grid_density +
-                           mis1*growth_sc*grid_density +
                            part_sc*grid_density +
+                           growth_sc * grid_density +
                            mastyear +
                            treatment +
                            (1|year) +
