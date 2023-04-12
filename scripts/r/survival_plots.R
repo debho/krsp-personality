@@ -262,3 +262,49 @@ ggsave("figures/survival~densitySCATTER.png",
                     overwinter_aggression_scatter_fig,
                     ncol = 2,
                     nrow = 2))
+
+growth_autumn_fig <- visreg(survival_to_autumn,
+                            "grid_density", by = "growth_sc",
+                            gg = T, overlay = T,
+                            xlab = "Density",
+                            ylab = "Probability of survival to autumn",
+                            point = list(alpha = 0.5),
+                            fill = list(alpha = 0)) +
+  scale_color_paletteer_d("ggprism::inferno",
+                          labels = c("Low Growth Rate",
+                                     "Medium Growth Rate",
+                                     "High Growth Rate")) +
+  scale_fill_paletteer_d("ggprism::inferno",
+                         labels = c("Low Growth Rate",
+                                    "Medium Growth Rate",
+                                    "High Growth Rate")) +
+  labs(color = "Growth Rate",
+       fill = "Growth Rate") +
+  theme_classic() +
+  labs_pubr()
+
+growth_overwinter_fig <- visreg(survival_to_200d,
+                                            "grid_density",by = "growth_sc",
+                                            gg = T, overlay = T,
+                                            xlab = "Density",
+                                            ylab = "Probability of survival overwinter",
+                                            point = list(alpha = 0.5),
+                                            fill = list(alpha = 0)) +
+  scale_color_paletteer_d("ggprism::floral",
+                          labels = c("Low Growth Rate",
+                                     "Medium Growth Rate",
+                                     "High Growth Rate")) +
+  scale_fill_paletteer_d("ggprism::floral",
+                         labels = c("Low Growth Rate",
+                                    "Medium Growth Rate",
+                                    "High Growth Rate")) +
+  labs(color = "Growth Rate",
+       fill = "Growth Rate") +
+  theme_classic() +
+  labs_pubr()
+
+ggsave("figures/survival~growthSCATTER.png",
+       grid.arrange(growth_autumn_fig,
+                    growth_overwinter_fig,
+                    ncol = 2,
+                    nrow = 1))

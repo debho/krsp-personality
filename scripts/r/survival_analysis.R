@@ -131,7 +131,7 @@ dat2 = personality %>%
 survival_to_200d = glmer(survived_200d ~ 
                            oft1*mis1*grid_density +
                            part_sc*grid_density +
-                           growth_sc * grid_density +
+                           growth_sc*grid_density +
                            mastyear +
                            treatment +
                            (1|year) +
