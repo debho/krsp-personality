@@ -12,10 +12,10 @@ survival_autumn_mast_fig <- ggplot(dat,
   theme_classic() +
   labs_pubr() +
   geom_jitter(aes(col = year)) +
-  scale_color_paletteer_d("ggprism::viridis") + 
+  scale_color_paletteer_d("ggthemes::colorblind") + 
   geom_violin(alpha = 0.8) +
   geom_boxplot(alpha = 0.3) +
-  scale_fill_paletteer_d("ggprism::pastels") +
+  scale_fill_paletteer_d("ggprism::magma") +
   labs(x = "Mast Year",
        y = "Probability of survival to autumn",
        col = "Year",
@@ -28,10 +28,10 @@ survival_200d_mast_fig <- ggplot(dat,
   theme_classic() +
   labs_pubr() +
   geom_jitter(aes(col = year)) +
-  scale_color_paletteer_d("ggprism::viridis") + 
+  scale_color_paletteer_d("ggthemes::colorblind") + 
   geom_violin(alpha = 0.8) +
   geom_boxplot(alpha = 0.3) +
-  scale_fill_paletteer_d("ggprism::pastels") +
+  scale_fill_paletteer_d("ggprism::magma") +
   labs(x = "Mast Year",
        y = "Probability of overwinter survival",
        col = "Year",
@@ -49,11 +49,11 @@ ggsave("figures/survival~mast.png",
 # oft x mis 3D ####
 par(mfrow = c(1, 2))
 autumn_personality <- gam(made_it ~ te(oft1, mis1), data = dat)
-overwinter_personality <- gam(survived_200d ~ te(oft1, mis1), data = dat)
+overwinter_personality <- gam(survived_200d ~ te(oft1, mis1), data = dat2)
 vis.gam(autumn_personality,
         plot.type = "persp",
-        color = "heat",
-        theta = 135,
+        color = "topo",
+        theta = -35,
         main = "(a.)",
         ticktype = "detailed",
         xlab = "Activity",
@@ -61,8 +61,8 @@ vis.gam(autumn_personality,
         zlab = "Probability of survival to autumn")
 vis.gam(overwinter_personality,
         plot.type = "persp",
-        color = "heat",
-        theta = 135,
+        color = "topo",
+        theta = -35,
         main = "(b.)",
         ticktype = "detailed",
         xlab = "Activity",
@@ -84,8 +84,8 @@ overwinter_aggression <- gam(survived_200d ~
                                te(mis1, grid_density), data = dat)
 vis.gam(autumn_activity,
         plot.type = "persp",
-        color = "heat",
-        theta = 135,
+        color = "topo",
+        theta = -35,
         main = "(a.)",
         ticktype = "detailed",
         xlab = "Activity",
@@ -93,8 +93,8 @@ vis.gam(autumn_activity,
         zlab = "Probability of survival to autumn") 
 vis.gam(overwinter_activity,
         plot.type = "persp",
-        color = "heat",
-        theta = 135,
+        color = "topo",
+        theta = -35,
         main = "(c.)",
         ticktype = "detailed",
         xlab = "Activity",
@@ -102,8 +102,8 @@ vis.gam(overwinter_activity,
         zlab = "Probability of survival overwinter")
 vis.gam(autumn_aggression,
         plot.type = "persp",
-        color = "heat",
-        theta = 135,
+        color = "topo",
+        theta = -35,
         main = "(b.)",
         ticktype = "detailed",
         xlab = "Aggression",
@@ -111,8 +111,8 @@ vis.gam(autumn_aggression,
         zlab = "Probability of survival to autumn")
 vis.gam(overwinter_aggression,
         plot.type = "persp",
-        color = "heat",
-        theta = 135,
+        color = "topo",
+        theta = -35,
         main = "(d.)",
         ticktype = "detailed",
         xlab = "Aggression",
