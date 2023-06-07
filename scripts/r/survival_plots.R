@@ -12,7 +12,7 @@ survival_autumn_mast_fig <- ggplot(dat,
   theme_classic() +
   labs_pubr() +
   geom_jitter(aes(col = year)) +
-  scale_color_paletteer_d("ggthemes::colorblind") + 
+  scale_color_paletteer_d("ggprism::colorblind_safe") + 
   geom_violin(alpha = 0.8) +
   geom_boxplot(alpha = 0.3) +
   scale_fill_paletteer_d("ggprism::magma") +
@@ -28,7 +28,7 @@ survival_200d_mast_fig <- ggplot(dat,
   theme_classic() +
   labs_pubr() +
   geom_jitter(aes(col = year)) +
-  scale_color_paletteer_d("ggthemes::colorblind") + 
+  scale_color_paletteer_d("ggprism::colorblind_safe") + 
   geom_violin(alpha = 0.8) +
   geom_boxplot(alpha = 0.3) +
   scale_fill_paletteer_d("ggprism::magma") +
@@ -131,13 +131,13 @@ autumn_personality_scatter_fig <- visreg(survival_to_autumn,
                                          gg = T, overlay = T,
                                          xlab = "Aggression",
                                          ylab = "Probability of survival to autumn",
-                                         point = list(alpha = 0.5),
+                                         point = list(alpha = 0.8),
                                          fill = list(alpha = 0)) +
-  scale_color_paletteer_d("ggprism::inferno",
+  scale_color_paletteer_d("ggprism::colorblind_safe",
                           labels = c("Low Activity",
                                      "Medium Activity",
                                      "High Activity")) +
-  scale_fill_paletteer_d("ggprism::inferno",
+  scale_fill_paletteer_d("ggprism::colorblind_safe",
                          labels = c("Low Activity",
                                     "Medium Activity",
                                     "High Activity")) + 
@@ -151,13 +151,13 @@ overwinter_personality_scatter_fig <- visreg(survival_to_200d,
                                              gg = T, overlay = T,
                                              xlab = "Aggression",
                                              ylab = "Probability of survival overwinter",
-                                             point = list(alpha = 0.5),
+                                             point = list(alpha = 0.8),
                                              fill = list(alpha = 0)) +
-  scale_color_paletteer_d("ggprism::floral",
+  scale_color_paletteer_d("ggprism::viridis",
                           labels = c("Low Activity",
                                      "Medium Activity",
                                      "High Activity")) +
-  scale_fill_paletteer_d("ggprism::floral",
+  scale_fill_paletteer_d("ggprism::viridis",
                          labels = c("Low Activity",
                                     "Medium Activity",
                                     "High Activity")) +
@@ -182,11 +182,11 @@ autumn_activity_scatter_fig <- visreg(survival_to_autumn,
                                       ylab = "Probability of survival to autumn",
                                       point = list(alpha = 0.5),
                                       fill = list(alpha = 0)) +
-  scale_color_paletteer_d("ggprism::inferno",
+  scale_color_paletteer_d("ggprism::colorblind_safe",
                           labels = c("Low Activity",
                                      "Medium Activity",
                                      "High Activity")) +
-  scale_fill_paletteer_d("ggprism::inferno",
+  scale_fill_paletteer_d("ggprism::colorblind_safe",
                          labels = c("Low Activity",
                                     "Medium Activity",
                                     "High Activity")) +
@@ -202,11 +202,11 @@ autumn_aggression_scatter_fig <- visreg(survival_to_autumn,
                                         ylab = "Probability of survival to autumn",
                                         point = list(alpha = 0.5),
                                         fill = list(alpha = 0)) +
-  scale_color_paletteer_d("ggprism::inferno",
+  scale_color_paletteer_d("ggprism::colorblind_safe",
                           labels = c("Low Aggression",
                                      "Medium Aggression",
                                      "High Aggression")) +
-  scale_fill_paletteer_d("ggprism::inferno",
+  scale_fill_paletteer_d("ggprism::colorblind_safe",
                          labels = c("Low Aggression",
                                     "Medium Aggression",
                                     "High Aggression")) +
@@ -222,11 +222,11 @@ overwinter_activity_scatter_fig <- visreg(survival_to_200d,
        ylab = "Probability of survival overwinter",
        point = list(alpha = 0.5),
        fill = list(alpha = 0)) +
-  scale_color_paletteer_d("ggprism::floral",
+  scale_color_paletteer_d("ggprism::viridis",
                           labels = c("Low Activity",
                                      "Medium Activity",
                                      "High Activity")) +
-  scale_fill_paletteer_d("ggprism::floral",
+  scale_fill_paletteer_d("ggprism::viridis",
                          labels = c("Low Activity",
                                     "Medium Activity",
                                     "High Activity")) +
@@ -242,11 +242,11 @@ overwinter_aggression_scatter_fig <- visreg(survival_to_200d,
        ylab = "Probability of survival overwinter",
        point = list(alpha = 0.5),
        fill = list(alpha = 0)) +
-  scale_color_paletteer_d("ggprism::floral",
+  scale_color_paletteer_d("ggprism::viridis",
                           labels = c("Low Aggression",
                                      "Medium Aggression",
                                      "High Aggression")) +
-  scale_fill_paletteer_d("ggprism::floral",
+  scale_fill_paletteer_d("ggprism::viridis",
                          labels = c("Low Aggression",
                                     "Medium Aggression",
                                     "High Aggression")) +
@@ -270,11 +270,11 @@ growth_autumn_fig <- visreg(survival_to_autumn,
                             ylab = "Probability of survival to autumn",
                             point = list(alpha = 0.5),
                             fill = list(alpha = 0)) +
-  scale_color_paletteer_d("ggprism::inferno",
+  scale_color_paletteer_d("ggprism::colorblind_safe",
                           labels = c("Low Growth Rate",
                                      "Medium Growth Rate",
                                      "High Growth Rate")) +
-  scale_fill_paletteer_d("ggprism::inferno",
+  scale_fill_paletteer_d("ggprism::colorblind_safe",
                          labels = c("Low Growth Rate",
                                     "Medium Growth Rate",
                                     "High Growth Rate")) +
@@ -290,11 +290,11 @@ growth_overwinter_fig <- visreg(survival_to_200d,
                                             ylab = "Probability of survival overwinter",
                                             point = list(alpha = 0.5),
                                             fill = list(alpha = 0)) +
-  scale_color_paletteer_d("ggprism::floral",
+  scale_color_paletteer_d("ggprism::viridis",
                           labels = c("Low Growth Rate",
                                      "Medium Growth Rate",
                                      "High Growth Rate")) +
-  scale_fill_paletteer_d("ggprism::floral",
+  scale_fill_paletteer_d("ggprism::viridis",
                          labels = c("Low Growth Rate",
                                     "Medium Growth Rate",
                                     "High Growth Rate")) +
