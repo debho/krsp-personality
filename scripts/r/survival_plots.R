@@ -45,87 +45,7 @@ ggsave("figures/survival~mast.png",
                     ncol = 2,
                     nrow = 1))
 
-# 3D FIGS ####
-# oft x mis 3D ####
-par(mfrow = c(1, 2))
-autumn_personality <- gam(made_it ~ te(oft1, mis1), data = dat)
-overwinter_personality <- gam(survived_200d ~ te(oft1, mis1), data = dat2)
-vis.gam(autumn_personality,
-        plot.type = "persp",
-        color = "topo",
-        theta = -35,
-        main = "(a.)",
-        ticktype = "detailed",
-        xlab = "Activity",
-        ylab = "Aggression",
-        zlab = "Probability of survival to autumn")
-vis.gam(overwinter_personality,
-        plot.type = "persp",
-        color = "topo",
-        theta = -35,
-        main = "(b.)",
-        ticktype = "detailed",
-        xlab = "Activity",
-        ylab = "Aggression",
-        zlab = "Probability of surviving overwinter")
-
-summary(autumn_personality)
-summary(overwinter_personality)
-
-# personality x density 3D ####
-par(mfrow = c(2, 2))
-autumn_activity <- gam(made_it ~
-                         te(oft1, grid_density), data = dat)
-autumn_aggression <- gam(made_it ~
-                           te(mis1, grid_density), data = dat)
-overwinter_activity <- gam(survived_200d ~
-                             te(oft1, grid_density), data = dat)
-overwinter_aggression <- gam(survived_200d ~
-                               te(mis1, grid_density), data = dat)
-vis.gam(autumn_activity,
-        plot.type = "persp",
-        color = "topo",
-        theta = -35,
-        main = "(a.)",
-        ticktype = "detailed",
-        xlab = "Activity",
-        ylab = "Density",
-        zlab = "Probability of survival to autumn") 
-vis.gam(overwinter_activity,
-        plot.type = "persp",
-        color = "topo",
-        theta = -35,
-        main = "(c.)",
-        ticktype = "detailed",
-        xlab = "Activity",
-        ylab = "Density",
-        zlab = "Probability of survival overwinter")
-vis.gam(autumn_aggression,
-        plot.type = "persp",
-        color = "topo",
-        theta = -35,
-        main = "(b.)",
-        ticktype = "detailed",
-        xlab = "Aggression",
-        ylab = "Density",
-        zlab = "Probability of survival to autumn")
-vis.gam(overwinter_aggression,
-        plot.type = "persp",
-        color = "topo",
-        theta = -35,
-        main = "(d.)",
-        ticktype = "detailed",
-        xlab = "Aggression",
-        ylab = "Density",
-        zlab = "Probability of survival overwinter")
-
-summary(autumn_activity)
-summary(overwinter_activity)
-summary(autumn_aggression)
-summary(overwinter_aggression)
-
-# SCATTERPLOTS ####
-# oft x mis figs #### 
+# FIGURE 1: activity x aggression ####
 autumn_personality_scatter_fig <- visreg(survival_to_autumn,
                                          "mis1", by = "oft1",
                                          gg = T, overlay = T,
@@ -144,7 +64,7 @@ autumn_personality_scatter_fig <- visreg(survival_to_autumn,
   labs(color = "Activity",
        fill = "Activity") +
   theme_classic() +
-  labs_pubr() 
+  labs_pubr()
 
 overwinter_personality_scatter_fig <- visreg(survival_to_200d,
                                              "mis1", by = "oft1",
@@ -166,14 +86,83 @@ overwinter_personality_scatter_fig <- visreg(survival_to_200d,
   theme_classic() +
   labs_pubr()
 
-ggsave("figures/survival~personalitySCATTER.png",
+ggsave("figures/survival_personality.png",
        grid.arrange(autumn_personality_scatter_fig,
                     overwinter_personality_scatter_fig,
-                    ncol = 2,
-                    nrow = 1))
+                    ncol = 1,
+                    nrow = 2))
 
+autumn_personality <- gam(made_it ~ te(oft1, mis1), data = dat)
+overwinter_personality <- gam(survived_200d ~ te(oft1, mis1), data = dat2)
+par(mfcol = c(2,2))
+vis.gam(autumn_personality,
+        plot.type = "persp",
+        color = "topo",
+        theta = 135,
+        ticktype = "detailed",
+        xlab = "Activity",
+        ylab = "Aggression",
+        zlab = "Probability of survival to autumn")
+vis.gam(overwinter_personality,
+        plot.type = "persp",
+        color = "topo",
+        theta = 135,
+        ticktype = "detailed",
+        xlab = "Activity",
+        ylab = "Aggression",
+        zlab = "Probability of surviving overwinter")
 
-# personality x density figs ####
+summary(autumn_personality)
+summary(overwinter_personality)
+
+# FIGURE 2: personality x density ####
+autumn_activity <- gam(made_it ~
+                         te(oft1, grid_density), data = dat)
+autumn_aggression <- gam(made_it ~
+                           te(mis1, grid_density), data = dat)
+overwinter_activity <- gam(survived_200d ~
+                             te(oft1, grid_density), data = dat)
+overwinter_aggression <- gam(survived_200d ~
+                               te(mis1, grid_density), data = dat)
+par(mfcol = c(2,2))
+vis.gam(autumn_activity,
+        plot.type = "persp",
+        color = "topo",
+        theta = -35,
+        ticktype = "detailed",
+        xlab = "Activity",
+        ylab = "Density",
+        zlab = "Probability of survival to autumn") 
+vis.gam(autumn_aggression,
+        plot.type = "persp",
+        color = "topo",
+        theta = -35,
+        ticktype = "detailed",
+        xlab = "Aggression",
+        ylab = "Density",
+        zlab = "Probability of survival to autumn")
+par(mfcol = c(2,2))
+vis.gam(overwinter_activity,
+        plot.type = "persp",
+        color = "topo",
+        theta = -35,
+        ticktype = "detailed",
+        xlab = "Activity",
+        ylab = "Density",
+        zlab = "Probability of survival overwinter")
+vis.gam(overwinter_aggression,
+        plot.type = "persp",
+        color = "topo",
+        theta = -35,
+        ticktype = "detailed",
+        xlab = "Aggression",
+        ylab = "Density",
+        zlab = "Probability of survival overwinter")
+
+summary(autumn_activity)
+summary(overwinter_activity)
+summary(autumn_aggression)
+summary(overwinter_aggression)
 
 autumn_activity_scatter_fig <- visreg(survival_to_autumn,
                                       "grid_density", by = "oft1",
@@ -255,13 +244,19 @@ overwinter_aggression_scatter_fig <- visreg(survival_to_200d,
   theme_classic() +
   labs_pubr()
 
-ggsave("figures/survival~densitySCATTER.png",
+ggsave("figures/survival~autumndensity.png",
        grid.arrange(autumn_activity_scatter_fig,
                     autumn_aggression_scatter_fig,
-                    overwinter_activity_scatter_fig,
-                    overwinter_aggression_scatter_fig,
-                    ncol = 2,
+                    ncol = 1,
                     nrow = 2))
+
+ggsave("figures/survival~overwinterdensity.png",
+       grid.arrange(overwinter_activity_scatter_fig,
+                    overwinter_aggression_scatter_fig,
+                    ncol = 1,
+                    nrow = 2))
+
+# FIGURE ???: growth rate x density ####  
 
 growth_autumn_fig <- visreg(survival_to_autumn,
                             "grid_density", by = "growth_sc",
