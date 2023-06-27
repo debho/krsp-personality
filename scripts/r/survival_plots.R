@@ -5,6 +5,7 @@ library(gridExtra)
 library(ggpubr)
 library(mgcv)
 library(visreg)
+library(ggrepel)
 
 # mastyear figs ####
 survival_autumn_mast_fig <- ggplot(dat,
@@ -12,10 +13,11 @@ survival_autumn_mast_fig <- ggplot(dat,
   theme_classic() +
   labs_pubr() +
   geom_jitter(aes(col = year)) +
-  scale_color_paletteer_d("ggprism::colorblind_safe") + 
-  geom_violin(alpha = 0.8) +
-  geom_boxplot(alpha = 0.3) +
-  scale_fill_paletteer_d("ggprism::magma") +
+  scale_color_paletteer_d("ggthemes::colorblind") + 
+  geom_violin(alpha = 0.8,
+              show.legend = F) +
+  geom_boxplot(alpha = 0.5) +
+  scale_fill_paletteer_d("ggprism::colorblind_safe") +
   labs(x = "Mast Year",
        y = "Probability of survival to autumn",
        col = "Year",
@@ -28,10 +30,11 @@ survival_200d_mast_fig <- ggplot(dat,
   theme_classic() +
   labs_pubr() +
   geom_jitter(aes(col = year)) +
-  scale_color_paletteer_d("ggprism::colorblind_safe") + 
-  geom_violin(alpha = 0.8) +
-  geom_boxplot(alpha = 0.3) +
-  scale_fill_paletteer_d("ggprism::magma") +
+  scale_color_paletteer_d("ggthemes::colorblind") + 
+  geom_violin(alpha = 0.8,
+              show.legend = F) +
+  geom_boxplot(alpha = 0.5) +
+  scale_fill_paletteer_d("ggprism::colorblind_safe") +
   labs(x = "Mast Year",
        y = "Probability of overwinter survival",
        col = "Year",
@@ -128,7 +131,7 @@ par(mfcol = c(2,2))
 vis.gam(autumn_activity,
         plot.type = "persp",
         color = "topo",
-        theta = -35,
+        theta = -135,
         ticktype = "detailed",
         xlab = "Activity",
         ylab = "Density",
@@ -136,7 +139,7 @@ vis.gam(autumn_activity,
 vis.gam(autumn_aggression,
         plot.type = "persp",
         color = "topo",
-        theta = -35,
+        theta = -135,
         ticktype = "detailed",
         xlab = "Aggression",
         ylab = "Density",
@@ -303,3 +306,53 @@ ggsave("figures/survival~growthSCATTER.png",
                     growth_overwinter_fig,
                     ncol = 2,
                     nrow = 1))
+
+# FIGURE ???: density by year ####
+# making the dataframe for each gridyear combination in the dataset
+density_JO <- grids_density %>%
+  filter(grid == "JO",
+         year %in% c(2018, 2019, 2020, 2021))
+density_KL <- grids_density %>%
+  filter(grid == "KL",
+         year %in% c(2005, 2009, 2012, 2017,
+                     2018, 2020, 2021))
+density_SU <- grids_density %>%
+  filter(grid == "SU",
+         year %in% c(2005, 2012, 2017, 2020,
+                     2021))
+density_JOKLSU <- rbind(density_JO,
+                        density_KL,
+                        density_SU) %>%
+  group_by(grid, year) %>%
+  mutate(treatment = factor(case_when((grid == "KL" |
+                                         grid == "SU") ~
+                                        "control",
+                                      grid == "JO" ~
+                                        "rattle")))
+# for positioning labels 
+line_end <- density_JOKLSU %>%
+  group_by(grid) %>%
+  filter(year == 2021)
+# making the graphs
+density_gridyear <- ggplot(density_JOKLSU,
+                           aes(year, grid_density, group = grid)) +
+  geom_line(aes(col = treatment),
+            linewidth = 0.75) +
+  geom_point(aes(col = treatment),
+             size = 3) +
+  geom_text_repel(data = line_end,
+                  aes(label = grid,
+                      col = treatment),
+                  nudge_x = 0.2,
+                  show.legend = F,
+                  size = 5,
+                  fontface = "bold") +
+  scale_color_paletteer_d("ggprism::colorblind_safe") +
+  labs(x = "Year",
+       y = "Spring Density (squirrels per ha)",
+       col = "Treatment") +
+  theme_classic() +
+  labs_pubr()
+
+ggsave("figures/density_gridyear.png",
+       density_gridyear)
