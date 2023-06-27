@@ -308,51 +308,58 @@ ggsave("figures/survival~growthSCATTER.png",
                     nrow = 1))
 
 # FIGURE ???: density by year ####
-# making the dataframe for each gridyear combination in the dataset
-density_JO <- grids_density %>%
-  filter(grid == "JO",
-         year %in% c(2018, 2019, 2020, 2021))
-density_KL <- grids_density %>%
-  filter(grid == "KL",
-         year %in% c(2005, 2009, 2012, 2017,
-                     2018, 2020, 2021))
-density_SU <- grids_density %>%
-  filter(grid == "SU",
-         year %in% c(2005, 2012, 2017, 2020,
-                     2021))
-density_JOKLSU <- rbind(density_JO,
-                        density_KL,
-                        density_SU) %>%
+# making the dataframe for each gridyear combination
+density_JOKLSU <- grids_density %>%
+  filter(grid %in% c("JO", "KL", "SU")) %>%
   group_by(grid, year) %>%
   mutate(treatment = factor(case_when((grid == "KL" |
                                          grid == "SU") ~
                                         "control",
                                       grid == "JO" ~
-                                        "rattle")))
+                                        "rattle")),
+         gridyear = paste(grid, year))
 # for positioning labels 
 line_end <- density_JOKLSU %>%
   group_by(grid) %>%
-  filter(year == 2021)
+  filter(year == 2022)
+gridyears <- dat %>%
+  select(grid,
+         year) %>%
+  mutate(gridyear = paste(grid, year)) %>%
+  distinct() %>%
+  left_join(density_JOKLSU,
+            by = "gridyear") %>%
+  select(gridyear,
+         grid = grid.y,
+         year = year.y,
+         grid_density,
+         treatment)
+
 # making the graphs
 density_gridyear <- ggplot(density_JOKLSU,
                            aes(year, grid_density, group = grid)) +
   geom_line(aes(col = treatment),
             linewidth = 0.75) +
+  geom_point(data = gridyears,
+             aes(year, grid_density, col = treatment),
+             size = 6,
+             alpha = 0.5,
+             stroke = 1,
+             show.legend = F) +
   geom_point(aes(col = treatment),
              size = 3) +
   geom_text_repel(data = line_end,
                   aes(label = grid,
                       col = treatment),
-                  nudge_x = 0.2,
+                  nudge_x = 0.75,
                   show.legend = F,
                   size = 5,
                   fontface = "bold") +
   scale_color_paletteer_d("ggprism::colorblind_safe") +
   labs(x = "Year",
        y = "Spring Density (squirrels per ha)",
-       col = "Treatment") +
+       col = "Treatment") + 
   theme_classic() +
   labs_pubr()
 
-ggsave("figures/density_gridyear.png",
-       density_gridyear)
+plot(density_gridyear)
