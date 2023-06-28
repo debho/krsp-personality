@@ -75,7 +75,10 @@ personality = left_join(personality, grids_density, by = c("grid", "year")) %>%
                                          grid == "SU") ~
                                                "control",
                                       grid == "JO" ~
-                                        "rattle")))
+                                        "rattle")),
+         mastyear = factor(mastyear,
+                           levels = c(1,0),
+                           labels = c("Yes", "No")))
 
 write_csv(personality, file = 'data/personality-mrw-survival.csv')
 

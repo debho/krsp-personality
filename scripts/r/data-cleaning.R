@@ -65,7 +65,7 @@ personality = read_csv('data/personality-master-updated.csv', show_col_types = F
          , collar
          , comments) %>%
   # create binary var for mast year and food-add
-  mutate(mastyear = as.factor(as.integer(year == 2005 | year == 2019))) %>%
+  mutate(mastyear = as.integer(year == 2005 | year == 2019)) %>%
   ungroup() %>%
   # Join to db data
   left_join(

@@ -219,48 +219,7 @@ overwinter_aggression_scatter_fig <- visreg(survival_to_200d,
 
 overwinter_aggression_scatter_fig
 
-# FIGURE S1: mastyear ####
-survival_autumn_mast_fig <- ggplot(dat,
-                                   aes(mastyear, made_it, fill = mastyear)) +
-  theme_classic() +
-  labs_pubr() +
-  geom_jitter(aes(col = year)) +
-  scale_color_paletteer_d("ggthemes::colorblind") + 
-  geom_violin(alpha = 0.8,
-              show.legend = F) +
-  geom_boxplot(alpha = 0.5) +
-  scale_fill_paletteer_d("ggprism::colorblind_safe") +
-  labs(x = "Mast Year",
-       y = "Probability of survival to autumn",
-       col = "Year",
-       fill = "Mast Year",
-       tag = "a.")
-plot(survival_autumn_mast_fig)
-
-survival_200d_mast_fig <- ggplot(dat,
-                                 aes(mastyear, survived_200d, fill = mastyear)) +
-  theme_classic() +
-  labs_pubr() +
-  geom_jitter(aes(col = year)) +
-  scale_color_paletteer_d("ggthemes::colorblind") + 
-  geom_violin(alpha = 0.8,
-              show.legend = F) +
-  geom_boxplot(alpha = 0.5) +
-  scale_fill_paletteer_d("ggprism::colorblind_safe") +
-  labs(x = "Mast Year",
-       y = "Probability of overwinter survival",
-       col = "Year",
-       fill = "Mast Year",
-       tag = "b.")
-plot(survival_200d_mast_fig)
-
-ggsave("figures/survival~mast.png",
-       grid.arrange(survival_autumn_mast_fig,
-                    survival_200d_mast_fig,
-                    ncol = 2,
-                    nrow = 1))
-
-# FIGURE S2: density by year ####
+# FIGURE S1: density by year ####
 # making the dataframe for each gridyear combination
 density_JOKLSU <- grids_density %>%
   filter(grid %in% c("JO", "KL", "SU")) %>%
@@ -308,14 +267,83 @@ density_gridyear <- ggplot(density_JOKLSU,
                   show.legend = F,
                   size = 5,
                   fontface = "bold") +
+  geom_vline(data = gridyears,
+             aes(xintercept = year),
+             linetype = "dashed",
+             size = 0.75,
+             alpha = 0.5) +
   scale_color_paletteer_d("ggprism::colorblind_safe") +
   labs(x = "Year",
        y = "Spring Density (squirrels per ha)",
        col = "Treatment") + 
   theme_classic() +
-  labs_pubr()
+  labs_pubr() + 
+  theme(axis.text = element_text(size = 18),
+        legend.text = element_text(size = 14),
+        axis.title = element_text(size = 20),
+        legend.title = element_text(size = 16),
+        legend.box.spacing = margin(0, -25, 0, 0),
+        plot.margin = margin(30, 30, 30, 30),
+        axis.title.y = element_text(vjust = 5),
+        axis.title.x = element_text(vjust = -2))
 
 plot(density_gridyear)
+
+# FIGURE S2: mastyear ####
+survival_autumn_mast_fig <- ggplot(dat,
+                                   aes(mastyear, made_it, fill = mastyear)) +
+  theme_classic() +
+  labs_pubr() +
+  geom_jitter(aes(col = year),
+              size = 3,
+              show.legend = F) +
+  scale_color_paletteer_d("ggthemes::colorblind") + 
+  geom_violin(alpha = 0.6,
+              show.legend = F) +
+  scale_fill_paletteer_d("ggprism::colorblind_safe") +
+  labs(x = "Mast Year?",
+       y = "Probability of survival to autumn",
+       col = "Year",
+       fill = "Mast Year?",
+       tag = "a.") + 
+  theme(axis.text = element_text(size = 18),
+        axis.title = element_text(size = 20),
+        plot.margin = margin(30, 0, 30, 30),
+        axis.title.y = element_text(vjust = 5),
+        axis.title.x = element_text(vjust = -2))
+
+plot(survival_autumn_mast_fig)
+
+survival_200d_mast_fig <- ggplot(dat,
+                                 aes(mastyear, survived_200d, fill = mastyear)) +
+  theme_classic() +
+  labs_pubr() +
+  geom_jitter(aes(col = year),
+              size = 3) +
+  scale_color_paletteer_d("ggthemes::colorblind") + 
+  geom_violin(alpha = 0.6) +
+  scale_fill_paletteer_d("ggprism::colorblind_safe") +
+  labs(x = "Mast Year?",
+       y = "Probability of overwinter survival",
+       col = "Year",
+       fill = "Mast Year?",
+       tag = "b.") + 
+  theme(axis.text = element_text(size = 18),
+        legend.text = element_text(size = 14),
+        axis.title = element_text(size = 20),
+        legend.title = element_text(size = 16),
+        legend.box.spacing = margin(0, -15, 0, 0),
+        plot.margin = margin(30, 0, 30, 0),
+        axis.title.y = element_text(vjust = 5),
+        axis.title.x = element_text(vjust = -2))
+
+plot(survival_200d_mast_fig)
+
+ggsave("figures/survival~mast.png",
+       grid.arrange(survival_autumn_mast_fig,
+                    survival_200d_mast_fig,
+                    ncol = 2,
+                    nrow = 1))
 
 # FIGURE ???: growth rate x density ####  
 growth_autumn_fig <- visreg(survival_to_autumn,
