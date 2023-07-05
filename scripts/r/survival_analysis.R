@@ -97,7 +97,7 @@ mis_indiv <- lmer(mis1 ~
                   data = dat)
 summary(mis_indiv) # no significant effects
 
-# Survival to fall census -------------------------------------------------
+# Survival to fall census ####-------------------------------------------------
 dat = personality %>% 
   mutate(across(c(year, dam_id, litter_id, grid, mastyear), as_factor)) 
 

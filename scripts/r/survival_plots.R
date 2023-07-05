@@ -3,64 +3,12 @@ library(paletteer)
 library(gtools)
 library(gridExtra)
 library(ggpubr)
-library(mgcv)
 library(visreg)
 library(ggrepel)
 library(LMERConvenienceFunctions)
 library(patchwork)
 
-# FIGURE 1 personality x density: scatterplots ####
-autumn_activity <- gam(made_it ~
-                         te(oft1, grid_density), data = dat)
-autumn_aggression <- gam(made_it ~
-                           te(mis1, grid_density), data = dat)
-overwinter_activity <- gam(survived_200d ~
-                             te(oft1, grid_density), data = dat)
-overwinter_aggression <- gam(survived_200d ~
-                               te(mis1, grid_density), data = dat)
-vis.gam(autumn_activity,
-        plot.type = "persp",
-        color = "topo",
-        theta = 225,
-        phi = 5,
-        ticktype = "detailed",
-        xlab = "Activity",
-        ylab = "Density",
-        zlab = "Probability of survival to autumn") 
-vis.gam(autumn_aggression,
-        plot.type = "persp",
-        color = "topo",
-        theta = -135,
-        phi = 15,
-        ticktype = "detailed",
-        xlab = "Aggression",
-        ylab = "Density",
-        zlab = "Probability of survival to autumn")
-
-vis.gam(overwinter_activity,
-        plot.type = "persp",
-        color = "topo",
-        theta = -135,
-        phi = 15,
-        ticktype = "detailed",
-        xlab = "Activity",
-        ylab = "Density",
-        zlab = "Probability of survival overwinter")
-vis.gam(overwinter_aggression,
-        plot.type = "persp",
-        color = "topo",
-        theta = -135,
-        phi = 15,
-        ticktype = "detailed",
-        xlab = "Aggression",
-        ylab = "Density",
-        zlab = "Probability of survival overwinter")
-
-summary(autumn_activity)
-summary(overwinter_activity)
-summary(autumn_aggression)
-summary(overwinter_aggression)
-
+# FIGURE 1 personality x density: autumn scatterplots ####
 autumn_activity_scatter_fig <- visreg(survival_to_autumn,
                                       "grid_density", by = "oft1",
                                       gg = T, overlay = T,
@@ -78,8 +26,7 @@ autumn_activity_scatter_fig <- visreg(survival_to_autumn,
                                     "Medium Activity",
                                     "High Activity")) +
   labs(color = "Activity",
-       fill = "Activity",
-       tag = "a.") +
+       fill = "Activity") +
   theme_classic() +
   labs_pubr() + 
   theme(axis.text = element_text(size = 18),
@@ -87,9 +34,11 @@ autumn_activity_scatter_fig <- visreg(survival_to_autumn,
         axis.title = element_text(size = 20),
         legend.title = element_text(size = 16),
         legend.position = "bottom",
-        plot.margin = margin(0, 15, 15, 30),
+        plot.margin = margin(15, 15, 0, 30),
         axis.title.y = element_text(vjust = 5),
-        axis.title.x = element_text(vjust = -1))
+        axis.title.x = element_text(vjust = -1),
+        plot.tag = element_text(size = 24,
+                                face = "bold"))
 
 autumn_activity_scatter_fig
 
@@ -110,8 +59,7 @@ autumn_aggression_scatter_fig <- visreg(survival_to_autumn,
                                     "Medium Aggression",
                                     "High Aggression")) +
   labs(color = "Aggression",
-       fill = "Aggression",
-       tag = "b.") +
+       fill = "Aggression") +
   theme_classic() +
   labs_pubr() + 
   theme(axis.text = element_text(size = 18),
@@ -119,23 +67,73 @@ autumn_aggression_scatter_fig <- visreg(survival_to_autumn,
         axis.title = element_text(size = 20),
         legend.title = element_text(size = 16),
         legend.position = "bottom",
-        plot.margin = margin(0, 30, 15, 15),
+        plot.margin = margin(15, 15, 0, 30),
         axis.title.y = element_text(vjust = 5),
-        axis.title.x = element_text(vjust = -1))
+        axis.title.x = element_text(vjust = -1),
+        plot.tag = element_text(size = 24,
+                                face = "bold"))
 
 autumn_aggression_scatter_fig
 
-ggsave("figures/survival~autumn.png",
-       grid.arrange(autumn_activity_scatter_fig,
-                    autumn_aggression_scatter_fig,
-                    ncol = 2,
-                    nrow = 1))
+# FIGURE 1 personality x density: autumn heatmaps ####
+autumn_activity_heatmap <- visreg2d(survival_to_autumn,
+                                    "grid_density", "oft1",
+                                    plot.type = "gg",
+                                    xlab = "Density",
+                                    ylab = "Activity") +
+  scale_fill_paletteer_c("viridis::rocket") +
+  labs(fill = "Probability of \nsurviving to autumn",
+       tag = "A.") +
+  theme_classic() +
+  labs_pubr()+ 
+  theme(axis.text = element_text(size = 18),
+        legend.text = element_text(size = 14),
+        axis.title = element_text(size = 20),
+        legend.title = element_text(size = 16),
+        legend.key.size = unit(45, "points"),
+        legend.position = "bottom",
+        legend.title.align = 1,
+        legend.box.spacing = unit(30, "point"),
+        plot.margin = margin(15, 15, 0, 30), 
+        axis.title.y = element_text(vjust = 5),
+        axis.title.x = element_text(vjust = -1),
+        plot.tag = element_text(size = 24,
+                                face = "bold"))
 
+autumn_activity_heatmap
+
+autumn_aggression_heatmap <- visreg2d(survival_to_autumn,
+                                      "grid_density", "mis1",
+                                      plot.type = "gg",
+                                      xlab = "Density",
+                                      ylab = "Aggression") +
+  scale_fill_paletteer_c("viridis::rocket") +
+  labs(fill = "Probability of \nsurviving to autumn",
+       tag = "B.") +
+  theme_classic() +
+  labs_pubr()+ 
+  theme(axis.text = element_text(size = 18),
+        legend.text = element_text(size = 14),
+        axis.title = element_text(size = 20),
+        legend.title = element_text(size = 16),
+        legend.key.size = unit(45, "points"),
+        legend.position = "bottom",
+        legend.title.align = 1,
+        legend.box.spacing = unit(30, "point"),
+        plot.margin = margin(15, 15, 0, 30), 
+        axis.title.y = element_text(vjust = 5),
+        axis.title.x = element_text(vjust = -1),
+        plot.tag = element_text(size = 24,
+                                face = "bold"))
+
+autumn_aggression_heatmap
+
+# FIGURE 1 personality x density: overwinter scatterplots ####
 overwinter_activity_scatter_fig <- visreg(survival_to_200d,
                                           "grid_density", by = "oft1",
                                           gg = T, overlay = T,
                                           xlab = "Density",
-                                          ylab = "Probability of survival overwinter",
+                                          ylab = "Probability of overwinter survival",
                                           point = list(alpha = 0.5,
                                                        size = 3),
                                           fill = list(alpha = 0)) +
@@ -148,8 +146,7 @@ overwinter_activity_scatter_fig <- visreg(survival_to_200d,
                                     "Medium Activity",
                                     "High Activity")) +
   labs(color = "Activity",
-       fill = "Activity",
-       tag = "c.") +
+       fill = "Activity") +
   theme_classic() +
   labs_pubr() + 
   theme(axis.text = element_text(size = 18),
@@ -159,7 +156,9 @@ overwinter_activity_scatter_fig <- visreg(survival_to_200d,
         legend.position = "bottom",
         plot.margin = margin(15, 15, 0, 30),
         axis.title.y = element_text(vjust = 5),
-        axis.title.x = element_text(vjust = -1))
+        axis.title.x = element_text(vjust = -1),
+        plot.tag = element_text(size = 24,
+                                face = "bold"))
 
 overwinter_activity_scatter_fig
 
@@ -167,7 +166,7 @@ overwinter_aggression_scatter_fig <- visreg(survival_to_200d,
                                             "grid_density",by = "mis1",
                                             gg = T, overlay = T,
                                             xlab = "Density",
-                                            ylab = "Probability of survival overwinter",
+                                            ylab = "Probability of overwinter survival",
                                             point = list(size = 3,
                                                          alpha = 0.5),
                                             fill = list(alpha = 0)) +
@@ -180,8 +179,7 @@ overwinter_aggression_scatter_fig <- visreg(survival_to_200d,
                                     "Medium Aggression",
                                     "High Aggression")) +
   labs(color = "Aggression",
-       fill = "Aggression",
-       tag = "d.") +
+       fill = "Aggression") +
   theme_classic() +
   labs_pubr()+ 
   theme(axis.text = element_text(size = 18),
@@ -189,19 +187,83 @@ overwinter_aggression_scatter_fig <- visreg(survival_to_200d,
         axis.title = element_text(size = 20),
         legend.title = element_text(size = 16),
         legend.position = "bottom",
-        plot.margin = margin(15, 30, 0, 15),
+        plot.margin = margin(15, 15, 0, 30),
         axis.title.y = element_text(vjust = 5),
-        axis.title.x = element_text(vjust = -1))
+        axis.title.x = element_text(vjust = -1),
+        plot.tag = element_text(size = 24,
+                                face = "bold"))
 
 overwinter_aggression_scatter_fig
 
-ggsave("figures/survival~overwinter.png",
-       grid.arrange(overwinter_activity_scatter_fig,
+# FIGURE 1 personality x density: overwinter heatmaps ####
+overwinter_activity_heatmap <- visreg2d(survival_to_200d,
+                                           "grid_density", "oft1",
+                                           plot.type = "gg",
+                                           xlab = "Density",
+                                           ylab = "Activity") +
+  scale_fill_paletteer_c("viridis::mako") +
+  labs(fill = "Probability of \noverwinter survival",
+       tag = "C.") +
+  theme_classic() +
+  labs_pubr()+ 
+  theme(axis.text = element_text(size = 18),
+        legend.text = element_text(size = 14),
+        axis.title = element_text(size = 20),
+        legend.title = element_text(size = 16),
+        legend.key.size = unit(45, "points"),
+        legend.position = "bottom",
+        legend.title.align = 1,
+        legend.box.spacing = unit(30, "point"),
+        plot.margin = margin(15, 15, 0, 30), 
+        axis.title.y = element_text(vjust = 5),
+        axis.title.x = element_text(vjust = -1),
+        plot.tag = element_text(size = 24,
+                                face = "bold"))
+
+overwinter_activity_heatmap
+
+overwinter_aggression_heatmap <- visreg2d(survival_to_200d,
+                                        "grid_density", "mis1",
+                                        plot.type = "gg",
+                                        xlab = "Density",
+                                        ylab = "Aggression") +
+  scale_fill_paletteer_c("viridis::mako") +
+  labs(fill = "Probability of \noverwinter survival",
+       tag = "D.") +
+  theme_classic() +
+  labs_pubr()+ 
+  theme(axis.text = element_text(size = 18),
+        legend.text = element_text(size = 14),
+        axis.title = element_text(size = 20),
+        legend.title = element_text(size = 16),
+        legend.key.size = unit(45, "points"),
+        legend.position = "bottom",
+        legend.title.align = 1,
+        legend.box.spacing = unit(30, "point"),
+        plot.margin = margin(15, 15, 0, 30), 
+        axis.title.y = element_text(vjust = 5),
+        axis.title.x = element_text(vjust = -1),
+        plot.tag = element_text(size = 24,
+                                face = "bold"))
+
+overwinter_aggression_heatmap
+
+# FIGURE 1 personality x density: complete ####
+ggsave("figures/fig 1_autumn.png",
+       grid.arrange(autumn_activity_heatmap,
+                    autumn_activity_scatter_fig,
+                    autumn_aggression_heatmap,
+                    autumn_aggression_scatter_fig,
+                    ncol = 2,
+                    nrow = 2))
+ggsave("figures/fig 1_overwinter.png",
+       grid.arrange(overwinter_activity_heatmap,
+                    overwinter_activity_scatter_fig,
+                    overwinter_aggression_heatmap,
                     overwinter_aggression_scatter_fig,
                     ncol = 2,
-                    nrow = 1))
+                    nrow = 2))
 
-# FIGURE 1 personality x density: 3-way plots ####
 # FIGURE 2 activity x aggression: scatterplots ####
 autumn_personality_scatter_fig <- visreg(survival_to_autumn,
                                          "mis1", by = "oft1",
@@ -220,8 +282,7 @@ autumn_personality_scatter_fig <- visreg(survival_to_autumn,
                                     "Medium Activity",
                                     "High Activity")) + 
   labs(color = "Activity",
-       fill = "Activity",
-       tag = "a.") +
+       fill = "Activity") +
   theme_classic() +
   labs_pubr() + 
   theme(axis.text = element_text(size = 18),
@@ -229,9 +290,11 @@ autumn_personality_scatter_fig <- visreg(survival_to_autumn,
         axis.title = element_text(size = 20),
         legend.title = element_text(size = 16),
         legend.position = "bottom",
-        plot.margin = margin(0, 15, 0, 30),
+        plot.margin = margin(15, 15, 0, 30),
         axis.title.y = element_text(vjust = 5),
-        axis.title.x = element_text(vjust = -1))
+        axis.title.x = element_text(vjust = -1),
+        plot.tag = element_text(size = 24,
+                                face = "bold"))
 
 autumn_personality_scatter_fig
 
@@ -239,7 +302,7 @@ overwinter_personality_scatter_fig <- visreg(survival_to_200d,
                                              "mis1", by = "oft1",
                                              gg = T, overlay = T,
                                              xlab = "Aggression",
-                                             ylab = "Probability of survival overwinter",
+                                             ylab = "Probability of overwinter survival",
                                              point = list(alpha = 0.5,
                                                           size = 3),
                                              fill = list(alpha = 0)) +
@@ -252,8 +315,7 @@ overwinter_personality_scatter_fig <- visreg(survival_to_200d,
                                     "Medium Activity",
                                     "High Activity")) +
   labs(color = "Activity",
-       fill = "Activity",
-       tag = "b.") +
+       fill = "Activity") +
   theme_classic() +
   labs_pubr() + 
   theme(axis.text = element_text(size = 18),
@@ -261,26 +323,23 @@ overwinter_personality_scatter_fig <- visreg(survival_to_200d,
         axis.title = element_text(size = 20),
         legend.title = element_text(size = 16),
         legend.position = "bottom",
-        plot.margin = margin(0, 30, 0, 15),
+        plot.margin = margin(15, 15, 0, 30),
         axis.title.y = element_text(vjust = 5),
-        axis.title.x = element_text(vjust = -1))
+        axis.title.x = element_text(vjust = -1),
+        plot.tag = element_text(size = 24,
+                                face = "bold"))
 
 overwinter_personality_scatter_fig
 
-ggsave("figures/survival~personality.png",
-       grid.arrange(autumn_personality_scatter_fig,
-                    overwinter_personality_scatter_fig,
-                    ncol = 2,
-                    nrow = 1))
-
-# FIGURE 2 activity x aggression: 3-way plots ####
+# FIGURE 2 activity x aggression: heatmaps ####
 autumn_personality_contour <- visreg2d(survival_to_autumn,
                                     "mis1", "oft1",
                                     plot.type = "gg",
                                     xlab = "Aggression",
                                     ylab = "Activity") +
   scale_fill_paletteer_c("viridis::rocket") +
-  labs(fill = "Probability of \nsurviving to autumn") +
+  labs(fill = "Probability of \nsurviving to autumn",
+       tag = "A.") +
   theme_classic() +
   labs_pubr()+ 
   theme(axis.text = element_text(size = 18),
@@ -293,7 +352,9 @@ autumn_personality_contour <- visreg2d(survival_to_autumn,
         legend.box.spacing = unit(30, "point"),
         plot.margin = margin(15, 15, 0, 30), 
         axis.title.y = element_text(vjust = 5),
-        axis.title.x = element_text(vjust = -1))
+        axis.title.x = element_text(vjust = -1),
+        plot.tag = element_text(size = 24,
+                                face = "bold"))
 
 autumn_personality_contour
 
@@ -303,7 +364,8 @@ overwinter_personality_contour <- visreg2d(survival_to_200d,
                                            xlab = "Aggression",
                                            ylab = "Activity") +
   scale_fill_paletteer_c("viridis::mako") +
-  labs(fill = "Probability of \nsurviving overwinter") +
+  labs(fill = "Probability of \noverwinter survival",
+       tag = "B.") +
   theme_classic() +
   labs_pubr()+ 
   theme(axis.text = element_text(size = 18),
@@ -314,40 +376,22 @@ overwinter_personality_contour <- visreg2d(survival_to_200d,
         legend.position = "bottom",
         legend.title.align = 1,
         legend.box.spacing = unit(30, "point"),
-        plot.margin = margin(15, 30, 0, 15), 
+        plot.margin = margin(15, 15, 0, 30), 
         axis.title.y = element_text(vjust = 5),
-        axis.title.x = element_text(vjust = -1))
+        axis.title.x = element_text(vjust = -1),
+        plot.tag = element_text(size = 24,
+                                face = "bold"))
 
 overwinter_personality_contour
 
-ggsave("figures/survival~personalityCONTOUR.png",
+# FIGURE 2 activity x aggression: complete ####
+ggsave("figures/fig 2.png",
        grid.arrange(autumn_personality_contour,
+                    autumn_personality_scatter_fig,
                     overwinter_personality_contour,
+                    overwinter_personality_scatter_fig,
                     ncol = 2,
-                    nrow = 1))
-# FIGURE 2 activity x aggression: 3D plots ####
-par(mfrow = c(1,2))
-
-autumn_personality_3D <- plotLMER3d.fnc(survival_to_autumn,
-                                        pred = "mis1",
-                                        intr = "oft1",
-                                        plot.type = "persp",
-                                        color = "topo",
-                                        xlab = "Aggression",
-                                        ylab = "Activity",
-                                        zlab = "Probability of survival to autumn",
-                                        theta = -25,
-                                        phi = 5)
-overwinter_personality_3D <- plotLMER3d.fnc(survival_to_200d,
-                                        pred = "mis1",
-                                        intr = "oft1",
-                                        plot.type = "persp",
-                                        color = "topo",
-                                        xlab = "Aggression",
-                                        ylab = "Activity",
-                                        zlab = "Probability of survival overwinter",
-                                        theta = -25,
-                                        phi = 5)
+                    nrow = 2))
 
 # FIGURE S1: density by year ####
 # making the dataframe for each gridyear combination
@@ -438,10 +482,10 @@ survival_autumn_mast_fig <- ggplot(dat,
        tag = "a.") + 
   theme(axis.text = element_text(size = 18),
         axis.title = element_text(size = 20),
-        plot.margin = margin(30, 0, 30, 30),
+        plot.margin = margin(0, 30, 30, 30),
         axis.title.y = element_text(vjust = 5),
-        axis.title.x = element_text(vjust = -2))
-
+        axis.title.x = element_text(vjust = -2)) 
+  
 plot(survival_autumn_mast_fig)
 
 survival_200d_mast_fig <- ggplot(dat,
@@ -463,7 +507,7 @@ survival_200d_mast_fig <- ggplot(dat,
         axis.title = element_text(size = 20),
         legend.title = element_text(size = 16),
         legend.box.spacing = margin(0, -15, 0, 0),
-        plot.margin = margin(30, 0, 30, 0),
+        plot.margin = margin(0, 30, 30, 0),
         axis.title.y = element_text(vjust = 5),
         axis.title.x = element_text(vjust = -2))
 
@@ -474,129 +518,3 @@ ggsave("figures/survival~mast.png",
                     survival_200d_mast_fig,
                     ncol = 2,
                     nrow = 1))
-
-# FIGURE ???: growth rate x density ####  
-growth_autumn_fig <- visreg(survival_to_autumn,
-                            "grid_density", by = "growth_sc",
-                            gg = T, overlay = T,
-                            xlab = "Density",
-                            ylab = "Probability of survival to autumn",
-                            point = list(alpha = 0.5),
-                            fill = list(alpha = 0)) +
-  scale_color_paletteer_d("ggprism::colorblind_safe",
-                          labels = c("Low Growth Rate",
-                                     "Medium Growth Rate",
-                                     "High Growth Rate")) +
-  scale_fill_paletteer_d("ggprism::colorblind_safe",
-                         labels = c("Low Growth Rate",
-                                    "Medium Growth Rate",
-                                    "High Growth Rate")) +
-  labs(color = "Growth Rate",
-       fill = "Growth Rate") +
-  theme_classic() +
-  labs_pubr()
-
-growth_autumn_fig
-
-growth_overwinter_fig <- visreg(survival_to_200d,
-                                            "grid_density",by = "growth_sc",
-                                            gg = T, overlay = T,
-                                            xlab = "Density",
-                                            ylab = "Probability of survival overwinter",
-                                            point = list(alpha = 0.5),
-                                            fill = list(alpha = 0)) +
-  scale_color_paletteer_d("ggprism::viridis",
-                          labels = c("Low Growth Rate",
-                                     "Medium Growth Rate",
-                                     "High Growth Rate")) +
-  scale_fill_paletteer_d("ggprism::viridis",
-                         labels = c("Low Growth Rate",
-                                    "Medium Growth Rate",
-                                    "High Growth Rate")) +
-  labs(color = "Growth Rate",
-       fill = "Growth Rate") +
-  theme_classic() +
-  labs_pubr()
-
-growth_overwinter_fig
-
-autumn_growth <- gam(made_it ~
-                       te(growth_sc, grid_density), data = dat)
-overwinter_growth <- gam(survived_200d ~
-                           te(growth_sc, grid_density), data = dat2)
-
-vis.gam(autumn_growth,
-        plot.type = "persp",
-        color = "topo",
-        theta = -135,
-        phi = 15,
-        ticktype = "detailed",
-        xlab = "Growth Rate",
-        ylab = "Density",
-        zlab = "Probability of survival to autumn") 
-
-vis.gam(overwinter_growth,
-        plot.type = "persp",
-        color = "topo",
-        theta = -135,
-        phi = 15,
-        ticktype = "detailed",
-        xlab = "Growth Rate",
-        ylab = "Density",
-        zlab = "Probability of survival overwinter") 
-
-# FIGURE 2 ALT: personality x density ####
-plotLMER3d.fnc(survival_to_autumn,
-               pred = "oft1",
-               intr = "grid_density",
-               plot.type = "persp",
-               color = "topo",
-               xlab = "Activity",
-               ylab = "Grid Density",
-               zlab = "Probability of surviving to autumn",
-               theta = -45,
-               phi = 5)
-
-plotLMER3d.fnc(survival_to_autumn,
-               pred = "mis1",
-               intr = "grid_density",
-               plot.type = "persp",
-               color = "topo",
-               xlab = "Aggression",
-               ylab = "Grid Density",
-               zlab = "Probability of surviving to autumn",
-               theta = -45,
-               phi = 5)
-
-plotLMER3d.fnc(survival_to_autumn,
-               pred = "oft1",
-               intr = "grid_density",
-               plot.type = "persp",
-               color = "topo",
-               xlab = "Activity",
-               ylab = "Grid Density",
-               zlab = "Probability of surviving to autumn",
-               theta = -45,
-               phi = 5)
-
-plotLMER3d.fnc(survival_to_200d,
-               pred = "oft1",
-               intr = "grid_density",
-               plot.type = "persp",
-               color = "topo",
-               xlab = "Activity",
-               ylab = "Grid Density",
-               zlab = "Probability of surviving overwinter",
-               theta = -45,
-               phi = 5)
-
-plotLMER3d.fnc(survival_to_200d,
-               pred = "mis1",
-               intr = "grid_density",
-               plot.type = "persp",
-               color = "topo",
-               xlab = "Aggression",
-               ylab = "Grid Density",
-               zlab = "Probability of surviving overwinter",
-               theta = -45,
-               phi = 5)
