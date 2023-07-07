@@ -1,5 +1,6 @@
 ---
 title: "Peer pressure: Are the fitness benefits of animal personality traits affected by conspecific density?"
+subtitle: "Ho et al. (2023)"
 date: "Jul 7, 2023"
 output: 
   html_document: 
@@ -7,3 +8,36 @@ output:
     theme: flatly
 ---
 
+```{r}
+library(tidyverse)
+library(RMySQL)
+library(lme4)
+```
+
+These analyses are largely based on the code that Matthew Whalen wrote in May 2022. I tweaked the code as needed as we finalized the models and analyses.
+
+# Data Cleaning
+
+`scripts/r/data-cleaning.R`
+
+We read in raw personality data from the master file (`data/personality-master-updated.csv`) and filtered for juveniles. We also ran filters to exclude:
+
+-   Records that indicated that they should be excluded
+
+-   Personality data scored by SWK due to GC experiment
+
+-   Any re-trials (i.e., only included the first trial for each individual)
+
+-   Squirrels from any grid other than **JO, KL, and SU**
+
+The model in `scripts/r/model-training.R` was used to predict and impute as many missing parturition dates as possible.
+
+```{r}
+personality <- read.csv("data/personality-mrw-imputed.csv")
+
+glimpse(personality)
+```
+
+After this, we get survival data to autumn and overwinter (200 days) in `scripts/r/survival_data.R` by pulling census data from the database.
+
+I also added in a column to indicate mast years (2005 and 2019) and non-mast years.
