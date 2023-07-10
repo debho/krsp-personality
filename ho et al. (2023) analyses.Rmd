@@ -1,12 +1,9 @@
 ---
 title: "Peer pressure: Are the fitness benefits of animal personality traits affected by conspecific density?"
 subtitle: "Ho et al. (2023)"
-date: "Jul 7, 2023"
+date: "Jul 10, 2023"
 output: 
-  html_document: 
-    fig_caption: yes
-    theme: lumen
-    highlight: tango
+  rmdformats::robobook
 ---
 
 ```{r, include = FALSE}
@@ -20,7 +17,7 @@ library(car)
 library(DHARMa)
 ```
 
-These analyses are largely based on the code that Matthew Whalen wrote in May 2022. I tweaked the code as needed as we finalized the models and analyses.
+These analyses are adapted from the code that Matthew Whalen wrote in May 2022. I tweaked the code as needed as we finalized the models and analyses.
 
 # Data cleaning
 
