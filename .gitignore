@@ -3,5 +3,8 @@
 .RData
 .Ruserdata
 Writeup.html
+Writeup.Rmd
 .Renviron
 .DS_Store
+.RData 2
+.Rprofile
