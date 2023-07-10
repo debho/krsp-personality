@@ -5,18 +5,24 @@ date: "Jul 7, 2023"
 output: 
   html_document: 
     fig_caption: yes
-    theme: flatly
+    theme: lumen
+    highlight: tango
 ---
 
-```{r}
+```{r, include = FALSE}
+options(tidyverse.quiet = TRUE)
 library(tidyverse)
 library(RMySQL)
-library(lme4)
+library(ade4) #for PCA
+library(ggplot2)
+library(lme4) #for glmers
+library(car)
+library(DHARMa)
 ```
 
 These analyses are largely based on the code that Matthew Whalen wrote in May 2022. I tweaked the code as needed as we finalized the models and analyses.
 
-# Data Cleaning
+# Data cleaning
 
 `scripts/r/data-cleaning.R`
 
@@ -40,4 +46,253 @@ glimpse(personality)
 
 After this, we get survival data to autumn and overwinter (200 days) in `scripts/r/survival_data.R` by pulling census data from the database.
 
-I also added in a column to indicate mast years (2005 and 2019) and non-mast years.
+I also added in a column to indicate mast years (2005 and 2019) and non-mast years and to indicate treatment ('rattle' for JO, 'control' for KL and SU).
+
+# Preparing data for analysis
+
+First, we standardize growth rate and part dates by grid-year combination.
+
+```{r}
+personality = read_csv('data/personality-mrw-survival.csv', show_col_types = FALSE) %>% 
+  mutate(survival = as.integer(survived_200d)) %>% 
+  group_by(grid, year) %>% 
+  mutate(growth_sc = scale(growth, scale = T, center = T)[,1],
+         part_sc = scale(part, scale = T, center = T)[,1]) %>% 
+  ungroup() 
+```
+
+Next, we conduct PCA on the OFT/MIS data to get loadings for activity and aggression.
+
+```{r}
+
+personality[is.na(personality$oft_duration),
+            "oft_duration"] <- 450.000
+personality[is.na(personality$mis_duration),
+            "mis_duration"] <- 300.000
+
+aggression = personality %>% 
+  select(front, back, attack, attacklatency, approachlatency, mis_duration) %>% 
+  mutate(across(everything(), ~if_else(is.na(.x), median(.x, na.rm = TRUE), .x))) %>%
+  mutate(front = front/mis_duration,
+         back = back/mis_duration,
+         attack = attack/mis_duration,
+         attacklatency = attacklatency/mis_duration,
+         approachlatency = approachlatency/mis_duration) %>%
+  select(-mis_duration)
+
+pca_agg = prcomp(aggression, scale = TRUE, center = TRUE)
+mis1 = predict(pca_agg)[,1]
+
+activity = personality %>% 
+  select(walk, still, hang, jump, chew, hole, groom, oft_duration) %>% 
+  mutate(across(everything(), ~if_else(is.na(.x), median(.x, na.rm = TRUE), .x)))%>%
+  mutate(walk = walk/oft_duration,
+         still = still/oft_duration,
+         hang = hang/oft_duration,
+         jump = jump/oft_duration,
+         chew = chew/oft_duration,
+         hole = hole/oft_duration,
+         groom = groom/oft_duration) %>%
+  select(-oft_duration)
+
+pca_act = prcomp(activity, scale = TRUE, center = TRUE)
+oft1 = predict(pca_act)[,1]
+```
+
+The loadings came out reversed, so we have to multiply them by -1.
+
+```{r}
+personality$oft1 = unlist(oft1 * -1)
+personality$mis1 = unlist(mis1 * -1)
+```
+
+Here are the plotted PCA loadings with a 95% ellipse.
+
+```{r}
+ggplot(personality, aes(oft1, mis1)) +
+  geom_point(size = 0.75) +
+  stat_ellipse(level = 0.95) +
+  labs(x = "Activity (PC1)",
+       y = "Aggression (PC1)") +
+  theme_minimal() +
+  theme(plot.margin = margin(20,20,20,20))
+```
+
+We scale grid density and age at time of trial globally, and activity (*oft1*) and aggression (*mis1*) by grid-year combination.
+
+```{r}
+personality <- personality %>%
+  mutate(grid_density = scale(grid_density, scale = T, center = T)[,1],
+         age_sc = scale(age_at_trial, scale = T, center = T)[,1]) %>%
+  group_by(grid, year) %>%
+  mutate(oft1 = scale(oft1, scale = T, center = T)[,1],
+         mis1 = scale(mis1, scale = T, center = T)[,1]) %>%
+  ungroup() %>%
+  mutate(treatment = factor(treatment))
+```
+
+# Generalized mixed-effects models
+
+## Survival to autumn
+
+Here's the model for survival to autumn. Fixed effects include:
+
+-   Activity
+
+-   Aggression
+
+-   Part date
+
+-   Growth rate
+
+-   Mast/non-mast year
+
+-   Treatment
+
+-   Grid density
+
+    -   Interactions with activity, aggression, part date, and growth rate
+
+Random effects include:
+
+-   Year (of birth)
+
+-   Litter ID
+
+```{r}
+dat = personality %>% 
+  mutate(across(c(year, dam_id, litter_id, grid, mastyear), as_factor)) 
+
+survival_to_autumn = glmer(made_it ~
+                             oft1*mis1*grid_density +
+                             part_sc*grid_density +
+                             growth_sc*grid_density +
+                             mastyear +
+                             treatment +
+                             (1|year) +
+                             (1|litter_id), 
+                           data = dat,
+                           na.action = 'na.omit',
+                           family = binomial(link = "logit"),
+                           control = glmerControl(optimizer = "bobyqa", optCtrl = list(maxfun = 1e8)))
+```
+
+### GLM
+
+```{r}
+car::Anova(survival_to_autumn)
+```
+
+-   Significant effect of mast year
+
+-   Significant interaction between growth rate and grid density
+
+-   Near-significant interaction between activity and aggression
+
+-   Near-significant interactions between activity, aggression, and grid density
+
+### Model effects
+
+```{r}
+summary(survival_to_autumn)
+```
+
+Here, we see that:
+
+-   Juvs have better survival during mast years
+
+-   More active and aggressive juvs survive better
+
+-   Slower growing juvs survive better under high density conditions
+
+-   There is a near-significant interaction effect between aggression and conspecific density (more aggressive juvs do better under high density conditions)
+
+### Model diagnostics
+
+Checking for any collinearity between predictors, where VIF \> 3 indicates collinearity:
+
+```{r}
+vif(survival_to_autumn)
+```
+
+All good here.
+
+```{r, results = 'hide'}
+simulationOutput = simulateResiduals(survival_to_autumn, plot = F)
+residuals(simulationOutput, quantileFunction = qnorm)
+```
+
+```{r}
+plot(simulationOutput)
+```
+
+No deviations here.
+
+## Overwinter survival (200 days)
+
+Here's the model for overwinter survival. All the fixed effects and random effects are the same as that of the survival to autumn model, except with *survived_to_200d* as the response variable instead.
+
+```{r}
+dat2 = personality %>% 
+  mutate(across(c(year, dam_id, litter_id, grid, mastyear), as_factor))
+
+survival_to_200d = glmer(survived_200d ~ 
+                           oft1*mis1*grid_density +
+                           part_sc*grid_density +
+                           growth_sc*grid_density +
+                           mastyear +
+                           treatment +
+                           (1|year) +
+                           (1|litter_id),
+                         data = dat2,
+                         na.action = 'na.omit',
+                         family = 'binomial',
+                         control = glmerControl(optimizer = "bobyqa", optCtrl = list(maxfun = 1e8)))
+```
+
+### GLM
+
+```{r}
+car::Anova(survival_to_200d)
+```
+
+-   Significant effect of mast year
+
+-   Significant interaction between activity and density
+
+-   Near-significant interaction between activity and aggression.
+
+### Model effects
+
+```{r}
+summary(survival_to_200d)
+```
+
+Here, we see that:
+
+-   Juvs have better survival during mast years
+
+-   More active and aggressive juvs survive better
+
+-   More active juvs survive better under high density conditions
+
+### Model diagnostics
+
+Checking for any collinearity between predictors, where VIF \> 3 indicates collinearity:
+
+```{r}
+vif(survival_to_200d)
+```
+
+All good here.
+
+```{r, results='hide'}
+simulationOutput = simulateResiduals(survival_to_200d, plot = F)
+residuals(simulationOutput, quantileFunction = qnorm)
+```
+
+```{r}
+plot(simulationOutput)
+```
+
+No deviations here either.
