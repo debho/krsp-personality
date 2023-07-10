@@ -14,7 +14,7 @@ library(ade4)
 library(lubridate)
 library(performance)
 
-
+# scale growth rate and part dates by grid-year combination
 personality = read_csv('data/personality-mrw-survival.csv', show_col_types = FALSE) %>% 
   mutate(survival = as.integer(survived_200d)) %>% 
   group_by(grid, year) %>% 
@@ -22,8 +22,7 @@ personality = read_csv('data/personality-mrw-survival.csv', show_col_types = FAL
          part_sc = scale(part, scale = T, center = T)[,1]) %>% 
   ungroup() 
 
-
-# GETTING PCA LOADINGS AND OFT/MIS SCORES 
+# PCA on raw OFT/MIS data ####
 personality[is.na(personality$oft_duration),
             "oft_duration"] <- 450.000
 personality[is.na(personality$mis_duration),
@@ -62,10 +61,16 @@ personality$mis1 = unlist(mis1 * -1)
 
 
 # scale personality by gridyear 
+personality <- personality %>%
+  mutate(grid_density = scale(grid_density, scale = T, center = T)[,1],
+         age_sc = scale(age_at_trial, scale = T, center = T)[,1]) %>%
+  group_by(grid, year) %>%
+  mutate(oft1 = scale(oft1, scale = T, center = T)[,1],
+         mis1 = scale(mis1, scale = T, center = T)[,1]) %>%
+  ungroup() %>%
+  mutate(treatment = factor(treatment))
 
-  
-
-# Factors that may influence personality ----------------------------------
+# Factors that may influence personality #### ----------------------------------
 oft_indiv <- lmer(oft1 ~
                     sex + 
                     age_sc*grid_density +
@@ -90,7 +95,7 @@ mis_indiv <- lmer(mis1 ~
                   data = dat)
 summary(mis_indiv) # no significant effects
 
-# Survival to fall census ####-------------------------------------------------
+# Model 1 Survival to autumn #### -------------------------------------------------
 dat = personality %>% 
   mutate(across(c(year, dam_id, litter_id, grid, mastyear), as_factor)) 
 
@@ -117,7 +122,7 @@ residuals(simulationOutput, quantileFunction = qnorm)
 plot(simulationOutput)
 # Looks pretty good
 
-# Model 2 Survival to 200 days --------------------------------------------
+# Model 2 Survival to 200 days #### --------------------------------------------
 dat2 = personality %>% 
   mutate(across(c(year, dam_id, litter_id, grid, mastyear), as_factor))
 

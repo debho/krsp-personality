@@ -332,7 +332,7 @@ overwinter_personality_scatter_fig <- visreg(survival_to_200d,
 overwinter_personality_scatter_fig
 
 # FIGURE 2 activity x aggression: heatmaps ####
-autumn_personality_contour <- visreg2d(survival_to_autumn,
+autumn_personality_heatmap <- visreg2d(survival_to_autumn,
                                     "mis1", "oft1",
                                     plot.type = "gg",
                                     xlab = "Aggression",
@@ -356,9 +356,9 @@ autumn_personality_contour <- visreg2d(survival_to_autumn,
         plot.tag = element_text(size = 24,
                                 face = "bold"))
 
-autumn_personality_contour
+autumn_personality_heatmap
 
-overwinter_personality_contour <- visreg2d(survival_to_200d,
+overwinter_personality_heatmap <- visreg2d(survival_to_200d,
                                            "mis1", "oft1",
                                            plot.type = "gg",
                                            xlab = "Aggression",
@@ -382,13 +382,13 @@ overwinter_personality_contour <- visreg2d(survival_to_200d,
         plot.tag = element_text(size = 24,
                                 face = "bold"))
 
-overwinter_personality_contour
+overwinter_personality_heatmap
 
 # FIGURE 2 activity x aggression: complete ####
 ggsave("figures/fig 2.png",
-       grid.arrange(autumn_personality_contour,
+       grid.arrange(autumn_personality_heatmap,
                     autumn_personality_scatter_fig,
-                    overwinter_personality_contour,
+                    overwinter_personality_heatmap,
                     overwinter_personality_scatter_fig,
                     ncol = 2,
                     nrow = 2))
