@@ -81,7 +81,7 @@ oft_indiv <- lmer(oft1 ~
                     (1|year) +
                     (1|litter_id),
                   data = dat)
-summary(oft_indiv) # no significant effects
+summary(oft_indiv) #no significant effects
 
 mis_indiv <- lmer(mis1 ~
                     sex +
@@ -93,7 +93,7 @@ mis_indiv <- lmer(mis1 ~
                     (1|year) +
                     (1|litter_id),
                   data = dat)
-summary(mis_indiv) # no significant effects
+summary(mis_indiv) #no significant effects
 
 # Model 1 Survival to autumn #### -------------------------------------------------
 dat = personality %>% 
@@ -114,6 +114,8 @@ survival_to_autumn = glmer(made_it ~
 
 car::Anova(survival_to_autumn)
 summary(survival_to_autumn)
+confint(survival_to_autumn,
+        method = "Wald") # 95%CIs
 
 # Diagnostics
 simulationOutput = simulateResiduals(survival_to_autumn, plot = F)
@@ -141,6 +143,9 @@ survival_to_200d = glmer(survived_200d ~
 #allFit(mod)
 car::Anova(survival_to_200d)
 summary(survival_to_200d)
+confint(survival_to_200d,
+        method = "Wald") #95% CIs
+
 # Diagnostics
 simulationOutput = simulateResiduals(survival_to_200d, plot = F)
 

@@ -3,7 +3,7 @@ title: "Peer pressure: Are the fitness benefits of animal personality traits aff
 subtitle: "Ho et al. (2023)"
 date: "Jul 10, 2023"
 output: 
-  rmdformats::robobook
+  rmdformats::downcute
 ---
 
 ```{r, include = FALSE}
@@ -174,7 +174,7 @@ survival_to_autumn = glmer(made_it ~
                            control = glmerControl(optimizer = "bobyqa", optCtrl = list(maxfun = 1e8)))
 ```
 
-### GLM
+### ANOVA
 
 ```{r}
 car::Anova(survival_to_autumn)
@@ -203,6 +203,13 @@ Here, we see that:
 -   Slower growing juvs survive better under high density conditions
 
 -   There is a near-significant interaction effect between aggression and conspecific density (more aggressive juvs do better under high density conditions)
+
+### 95% CI
+
+```{r}
+confint(survival_to_autumn,
+        method = "Wald")
+```
 
 ### Model diagnostics
 
@@ -247,7 +254,7 @@ survival_to_200d = glmer(survived_200d ~
                          control = glmerControl(optimizer = "bobyqa", optCtrl = list(maxfun = 1e8)))
 ```
 
-### GLM
+### ANOVA
 
 ```{r}
 car::Anova(survival_to_200d)
@@ -272,6 +279,13 @@ Here, we see that:
 -   More active and aggressive juvs survive better
 
 -   More active juvs survive better under high density conditions
+
+### 95% CI
+
+```{r}
+confint(survival_to_200d,
+        method = "Wald")
+```
 
 ### Model diagnostics
 
