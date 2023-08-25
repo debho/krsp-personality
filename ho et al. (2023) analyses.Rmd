@@ -1,7 +1,7 @@
 ---
 title: "Peer pressure: Are the fitness benefits of animal personality traits affected by conspecific density?"
 subtitle: "Ho et al. (2023)"
-date: "Jul 10, 2023"
+date: "Aug 25,2023"
 output: 
   rmdformats::downcute
 ---
@@ -17,7 +17,7 @@ library(car)
 library(DHARMa)
 ```
 
-These analyses are adapted from the code that Matthew Whalen wrote in May 2022. I tweaked the code as needed as we finalized the models and analyses.
+These analyses are adapted from the [code that Matthew Whalen wrote in May 2022](https://github.com/mwhalen18/krsp-personality). I tweaked the code as needed as we finalized the models and analyses.
 
 # Data cleaning
 
@@ -115,7 +115,7 @@ ggplot(personality, aes(oft1, mis1)) +
   theme(plot.margin = margin(20,20,20,20))
 ```
 
-We scale grid density and age at time of trial globally, and activity (*oft1*) and aggression (*mis1*) by grid-year combination.
+We scale spring grid density (may also be referred to as "density" hereafter) and age at time of trial globally, and activity (*oft1*) and aggression (*mis1*) by grid-year combination.
 
 ```{r}
 personality <- personality %>%
@@ -134,27 +134,57 @@ personality <- personality %>%
 
 Here's the model for survival to autumn. Fixed effects include:
 
--   Activity
+-   Personality measures
 
--   Aggression
+    -   Activity (*oft1*)
 
--   Part date
+    -   Aggression (*mis1*)
 
--   Growth rate
+    -   Interaction between *oft1* and *mis1*
 
--   Mast/non-mast year
+-   Part date (*part_sc*)
 
--   Treatment
+    -   Previously shown to influence juvenile survival (Williams et al., 2014)
 
--   Grid density
+-   Growth rate (*growth_sc*)
 
-    -   Interactions with activity, aggression, part date, and growth rate
+    -   Previously shown to be an important predictor of juvenile survival (Fisher et al., 2017; McAdam et al., 2019; Dantzer et al., 2020; Westrick et al., 2021)
+
+-   Mast/non-mast year (*mastyear*)
+
+    -   Juvenile survival is higher in mast years (McAdam et al., 2003; McAdam et al., 2019)
+
+-   Treatment (*treatment*)
+
+-   Spring grid density (*grid_density*)
+
+    -   Interactions between *grid_density* and
+
+        -   *oft1*
+
+        -   *mis1*
+
+        -   *oft1* x *mis1*
+
+        -   *part_sc*
+
+        -   *growth_sc*
+
+    -   Rationale for the selected interactions with *grid_density* are as below:
+
+        | Variable        | Reason                                                                                             |
+        |-------------------|-----------------------------------------------------|
+        | *oft1*          | Examine whether selection on activity is density-dependent.                                        |
+        | *mis1*          | Examine whether selection on aggression is density-dependent.                                      |
+        | *oft1* x *mis1* | Examine whether selection on the interaction between activity and aggression is density-dependent. |
+        | *part_sc*       | Examine whether the effects of parturition date on survival are density-dependent                  |
+        | *growth_sc*     | Prior studies have shown that selection on growth rate is density dependent (Dantzer et al., 2013) |
 
 Random effects include:
 
--   Year (of birth)
+-   Year (of birth) (*year*)
 
--   Litter ID
+-   Litter ID (*litter_id*)
 
 ```{r}
 dat = personality %>% 
@@ -182,11 +212,11 @@ car::Anova(survival_to_autumn)
 
 -   Significant effect of mast year
 
--   Significant interaction between growth rate and grid density
+-   Significant interaction between growth rate and spring grid density
 
 -   Near-significant interaction between activity and aggression
 
--   Near-significant interactions between activity, aggression, and grid density
+-   Near-significant interactions between activity, aggression, and spring grid density
 
 ### Model effects
 
