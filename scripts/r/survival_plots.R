@@ -464,7 +464,14 @@ density_gridyear <- ggplot(density_JOKLSU,
 plot(density_gridyear)
 
 # FIGURE S2: mastyear ####
-survival_autumn_mast_fig <- ggplot(dat,
+dat_analysis <- dat %>%
+  filter(!is.na(oft1),
+         !is.na(mis1),
+         !is.na(grid_density),
+         !is.na(part_sc),
+         !is.na(growth_sc))
+
+survival_autumn_mast_fig <- ggplot(dat_analysis,
                                    aes(mastyear, made_it, fill = mastyear)) +
   theme_classic() +
   labs_pubr() +
