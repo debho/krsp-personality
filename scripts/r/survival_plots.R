@@ -464,6 +464,8 @@ density_gridyear <- ggplot(density_JOKLSU,
 
 plot(density_gridyear)
 
+ggsave("figures/density_gridyear.png", density_gridyear)
+
 # FIGURE S2: mastyear ####
 dat_analysis <- dat %>%
   filter(!is.na(oft1),
