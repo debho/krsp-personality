@@ -25,8 +25,8 @@ autumn_activity_scatter_fig <- visreg(survival_to_autumn,
                          labels = c("Low Density",
                                     "Medium Density",
                                     "High Density")) +
-  labs(color = "Grid Density",
-       fill = "Grid Density") +
+  labs(color = "Grid Density\n(squirrels per ha)",
+       fill = "Grid Density\n(squirrels per ha)") +
   theme_classic() +
   labs_pubr() + 
   theme(axis.text = element_text(size = 18),
@@ -58,8 +58,8 @@ autumn_aggression_scatter_fig <- visreg(survival_to_autumn,
                          labels = c("Low Density",
                                     "Medium Density",
                                     "High Density")) +
-  labs(color = "Grid Density",
-       fill = "Grid Density") +
+  labs(color = "Grid Density\n(squirrels per ha)",
+       fill = "Grid Density\n(squirrels per ha)") +
   theme_classic() +
   labs_pubr() + 
   theme(axis.text = element_text(size = 18),
@@ -80,7 +80,7 @@ autumn_activity_heatmap <- visreg2d(survival_to_autumn,
                                     "oft1", "grid_density",
                                     plot.type = "gg",
                                     xlab = "Activity",
-                                    ylab = "Grid Density") +
+                                    ylab = "Grid Density\n(squirrels per ha)") +
   scale_fill_paletteer_c("viridis::rocket") +
   labs(fill = "Probability of \nsurviving to autumn",
        tag = "A.") +
@@ -106,7 +106,7 @@ autumn_aggression_heatmap <- visreg2d(survival_to_autumn,
                                       "mis1", "grid_density",
                                       plot.type = "gg",
                                       xlab = "Aggression",
-                                      ylab = "Grid Density") +
+                                      ylab = "Grid Density\n(squirrels per ha)") +
   scale_fill_paletteer_c("viridis::rocket") +
   labs(fill = "Probability of \nsurviving to autumn",
        tag = "B.") +
@@ -145,8 +145,8 @@ overwinter_activity_scatter_fig <- visreg(survival_to_200d,
                          labels = c("Low Density",
                                     "Medium Density",
                                     "High Density")) +
-  labs(color = "Grid Density",
-       fill = "Grid Density") +
+  labs(color = "Grid Density\n(squirrels per ha)",
+       fill = "Grid Density\n(squirrels per ha)") +
   theme_classic() +
   labs_pubr() + 
   theme(axis.text = element_text(size = 18),
@@ -178,8 +178,8 @@ overwinter_aggression_scatter_fig <- visreg(survival_to_200d,
                          labels = c("Low Density",
                                     "Medium Density",
                                     "High Density")) +
-  labs(color = "Grid Density",
-       fill = "Grid Density") +
+  labs(color = "Grid Density\n(squirrels per ha)",
+       fill = "Grid Density\n(squirrels per ha)") +
   theme_classic() +
   labs_pubr()+ 
   theme(axis.text = element_text(size = 18),
@@ -200,7 +200,7 @@ overwinter_activity_heatmap <- visreg2d(survival_to_200d,
                                            "oft1", "grid_density",
                                            plot.type = "gg",
                                            xlab = "Activity",
-                                           ylab = "Grid Density") +
+                                           ylab = "Grid Density\n(squirrels per ha)") +
   scale_fill_paletteer_c("viridis::mako") +
   labs(fill = "Probability of \noverwinter survival",
        tag = "C.") +
@@ -226,7 +226,7 @@ overwinter_aggression_heatmap <- visreg2d(survival_to_200d,
                                         "mis1", "grid_density",
                                         plot.type = "gg",
                                         xlab = "Aggression",
-                                        ylab = "Grid Density") +
+                                        ylab = "Grid Density\n(squirrels per ha)") +
   scale_fill_paletteer_c("viridis::mako") +
   labs(fill = "Probability of \noverwinter survival",
        tag = "D.") +

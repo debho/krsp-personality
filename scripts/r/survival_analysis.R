@@ -70,6 +70,15 @@ personality <- personality %>%
   ungroup() %>%
   mutate(treatment = factor(treatment))
 
+personality_imputed <- personality %>%
+  group_by(grid, year) %>%
+  mutate(growth = ifelse(is.na(growth),
+                            mean(growth, na.rm = T),
+                            growth)) %>%
+  mutate(growth_sc = scale(growth, scale = T, center = T)[,1]) %>%
+  ungroup()
+  
+
 # Factors that may influence personality #### ----------------------------------
 oft_indiv <- lmer(oft1 ~
                     sex + 
@@ -95,8 +104,13 @@ mis_indiv <- lmer(mis1 ~
                   data = dat)
 summary(mis_indiv) #no significant effects
 
+# n=1 missing oft1
+# n=1 missing mis1
+# n=35 missing growth_sc
+# n=3 missing part_sc
+
 # Model 1 Survival to autumn #### -------------------------------------------------
-dat = personality %>% 
+dat = personality_imputed %>% 
   mutate(across(c(year, dam_id, litter_id, grid, mastyear), as_factor)) 
 
 survival_to_autumn = glmer(made_it ~
@@ -125,7 +139,7 @@ plot(simulationOutput)
 # Looks pretty good
 
 # Model 2 Survival to 200 days #### --------------------------------------------
-dat2 = personality %>% 
+dat2 = personality_imputed %>% 
   mutate(across(c(year, dam_id, litter_id, grid, mastyear), as_factor))
 
 survival_to_200d = glmer(survived_200d ~ 
@@ -138,7 +152,7 @@ survival_to_200d = glmer(survived_200d ~
                            (1|litter_id),
                          data = dat2,
                          na.action = 'na.omit',
-                         family = 'binomial',
+                         family = 'binomial'(link = "logit"),
                          control = glmerControl(optimizer = "bobyqa", optCtrl = list(maxfun = 1e8)))
 #allFit(mod)
 car::Anova(survival_to_200d)
@@ -158,3 +172,4 @@ icc(survival_to_autumn, by_group = T, tolerance = 0)
 icc(survival_to_200d, by_group = T, tolerance = 0)
 vif(survival_to_autumn)
 vif(survival_to_200d)
+
