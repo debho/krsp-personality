@@ -20,7 +20,9 @@ personality = read_csv('data/personality-mrw-survival.csv', show_col_types = FAL
   group_by(grid, year) %>% 
   mutate(growth_sc = scale(growth, scale = T, center = T)[,1],
          part_sc = scale(part, scale = T, center = T)[,1]) %>% 
-  ungroup() 
+  ungroup() %>%
+  filter(trialnumber == 1,
+         squirrel_id %in% personality2$squirrel_id)
 
 # PCA on raw OFT/MIS data ####
 personality[is.na(personality$oft_duration),
