@@ -53,11 +53,34 @@ personality_repeat$oft1 = unlist(oft1_rep * -1)
 personality_repeat$mis1 = unlist(mis1_rep * -1)
 
 #non-adjusted repeatability
-rep_na <- lmer(oft1 ~ (1|squirrel_id) + (1|gridyear),
+OFTrep_na <- lmer(oft1 ~ (1|squirrel_id) + (1|gridyear),
                personality_repeat)
-summary(rep_na)
-plot(rep_na)
-hist(resid(rep_na))
+summary(OFTrep_na)
+plot(OFTrep_na)
+hist(resid(OFTrep_na))
+
+MISrep_na <- lmer(mis1 ~ (1|squirrel_id) + (1|gridyear),
+                  personality_repeat)
+summary(MISrep_na)
+plot(MISrep_na)
+hist(resid(MISrep_na))
 
 #adjusted repeatability
+OFTrep_a <- lmer(oft1 ~ trialnumber + sex +
+                   (1|squirrel_id) + (1|gridyear),
+                  personality_repeat)
+summary(OFTrep_a)
+plot(OFTrep_a)
+hist(resid(OFTrep_a))
+confint(OFTrep_a,
+        method = "Wald")
+
+MISrep_a <- lmer(mis1 ~ trialnumber + sex +
+                   (1|squirrel_id) + (1|gridyear),
+                 personality_repeat)
+summary(MISrep_a)
+plot(MISrep_a)
+hist(resid(MISrep_a))
+confint(MISrep_a,
+        method = "Wald")
 
