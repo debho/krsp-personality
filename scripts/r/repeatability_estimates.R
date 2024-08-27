@@ -9,7 +9,55 @@ personality_repeat <- personality %>%
   filter(squirrel_id %in% personality2$squirrel_id) %>%
   bind_rows(personality2)
 
+personality_repeat <- personality_repeat %>%
+  mutate(gridyear = paste(grid,year))
+
 n_distinct(personality_repeat$squirrel_id)
 #n = 60 juveniles
 
+# run PCA on this subset for sanity purposes
+personality_repeat[is.na(personality_repeat$oft_duration),
+            "oft_duration"] <- 450.000
+personality_repeat[is.na(personality_repeat$mis_duration),
+            "mis_duration"] <- 300.000
+
+aggression = personality_repeat %>% 
+  select(front, back, attack, attacklatency, approachlatency, mis_duration) %>% 
+  mutate(across(everything(), ~if_else(is.na(.x), median(.x, na.rm = TRUE), .x))) %>%
+  mutate(front = front/mis_duration,
+         back = back/mis_duration,
+         attack = attack/mis_duration,
+         attacklatency = attacklatency/mis_duration,
+         approachlatency = approachlatency/mis_duration) %>%
+  select(-mis_duration)
+
+pca_agg_rep = prcomp(aggression, scale = TRUE, center = TRUE)
+mis1_rep = predict(pca_agg_rep)[,1]
+
+activity = personality_repeat %>% 
+  select(walk, still, hang, jump, chew, hole, groom, oft_duration) %>% 
+  mutate(across(everything(), ~if_else(is.na(.x), median(.x, na.rm = TRUE), .x)))%>%
+  mutate(walk = walk/oft_duration,
+         still = still/oft_duration,
+         hang = hang/oft_duration,
+         jump = jump/oft_duration,
+         chew = chew/oft_duration,
+         hole = hole/oft_duration,
+         groom = groom/oft_duration) %>%
+  select(-oft_duration)
+
+pca_act_rep = prcomp(activity, scale = TRUE, center = TRUE)
+oft1_rep = predict(pca_act_rep)[,1]
+
+personality_repeat$oft1 = unlist(oft1_rep * -1)
+personality_repeat$mis1 = unlist(mis1_rep * -1)
+
+#non-adjusted repeatability
+rep_na <- lmer(oft1 ~ (1|squirrel_id) + (1|gridyear),
+               personality_repeat)
+summary(rep_na)
+plot(rep_na)
+hist(resid(rep_na))
+
+#adjusted repeatability
 
