@@ -3,6 +3,10 @@
 library(tidyverse)
 library(lme4)
 
+#######################
+#### MIN. 2 TRIALS ####
+#######################
+
 #obtained personality2 by changing trialnumber == 2 in data-cleaning.R to extract all trial 2 juvs
 personality2 <- personality2 %>%
   filter(squirrel_id %in% personality$squirrel_id) %>% #removes those missing trial 1
@@ -64,37 +68,37 @@ personality_repeat <- read.csv("data/personality-repeatability.csv",
 #### OFT 1 ####
 ###############
 
-#non-adjusted repeatability
-OFTna <- lmer(oft1 ~ (1|squirrel_id) + (1|gridyear),
+#non-adjusted repeatability ####
+OFTna_all <- lmer(oft1 ~ (1|squirrel_id) + (1|gridyear),
                personality_repeat)
-summary(OFTna)
-plot(OFTna)
-hist(resid(OFTna))
+summary(OFTna_all)
+plot(OFTna_all)
+hist(resid(OFTna_all))
 
-OFTna.sim <- arm::sim(OFTna, 1000)
-OFTna.fixef = OFTna.sim@fixef
-OFTna.ranef = OFTna.sim@ranef
-OFTna.fixef = coda::as.mcmc(OFTna.fixef)
-MCMCglmm::posterior.mode(OFTna.fixef)
-coda::HPDinterval(OFTna.fixef)
+OFTna_all.sim <- arm::sim(OFTna_all, 1000)
+OFTna_all.fixef = OFTna_all.sim@fixef
+OFTna_all.ranef = OFTna_all.sim@ranef
+OFTna_all.fixef = coda::as.mcmc(OFTna_all.fixef)
+MCMCglmm::posterior.mode(OFTna_all.fixef)
+coda::HPDinterval(OFTna_all.fixef)
 
 ##among-indiv variance
-OFTna.bID <- OFTna.sim@ranef$squirrel_id
-OFTna.bvar <- as.vector(apply(OFTna.bID, 1, var))
-OFTna.bvar <- coda::as.mcmc(OFTna.bvar)
-MCMCglmm::posterior.mode(OFTna.bvar)
-coda::HPDinterval(OFTna.bvar)
+OFTna_all.bID <- OFTna_all.sim@ranef$squirrel_id
+OFTna_all.bvar <- as.vector(apply(OFTna_all.bID, 1, var))
+OFTna_all.bvar <- coda::as.mcmc(OFTna_all.bvar)
+MCMCglmm::posterior.mode(OFTna_all.bvar)
+coda::HPDinterval(OFTna_all.bvar)
 
 ##residual variance
-OFTna.rvar <- OFTna.sim@sigma^2
-OFTna.rvar <- coda::as.mcmc(OFTna.rvar)
-MCMCglmm::posterior.mode(OFTna.rvar)
-coda::HPDinterval(OFTna.rvar)
+OFTna_all.rvar <- OFTna_all.sim@sigma^2
+OFTna_all.rvar <- coda::as.mcmc(OFTna_all.rvar)
+MCMCglmm::posterior.mode(OFTna_all.rvar)
+coda::HPDinterval(OFTna_all.rvar)
 
 ##repeatability
-OFTna.rID <- OFTna.bvar/(OFTna.bvar + OFTna.rvar)
-MCMCglmm::posterior.mode(OFTna.rID)
-coda::HPDinterval(OFTna.rID)
+OFTna_all.rID <- OFTna_all.bvar/(OFTna_all.bvar + OFTna_all.rvar)
+MCMCglmm::posterior.mode(OFTna_all.rID)
+coda::HPDinterval(OFTna_all.rID)
 
 #adjusted repeatability ####
 OFTa <- lmer(oft1 ~ trialnumber + sex +
@@ -199,3 +203,135 @@ coda::HPDinterval(MISa.rvar)
 MISa.rID <- MISa.bvar/(MISa.bvar + MISa.rvar)
 MCMCglmm::posterior.mode(MISa.rID)
 coda::HPDinterval(MISa.rID)
+
+
+####################
+#### ALL TRIALS ####
+####################
+
+#obtained personality_all by removing trial number filter in data-cleaning.R
+personality_all <- personality_all %>%
+  drop_na(front,
+          walk) #removes all missing behavioral assays
+
+write_csv(personality_all, "data/personality-all.csv")
+
+personality_all <- read.csv("data/personality-all.csv",
+                            header = T) %>%
+  mutate(gridyear = paste(grid,year))
+
+n_distinct(personality_all$squirrel_id)
+#n = 270 juveniles
+
+# run PCA on this for sanity purposes
+personality_all[is.na(personality_all$oft_duration),
+                   "oft_duration"] <- 450.000
+personality_all[is.na(personality_all$mis_duration),
+                   "mis_duration"] <- 300.000
+
+aggression = personality_all %>% 
+  select(front, back, attack, attacklatency, approachlatency, mis_duration) %>% 
+  mutate(across(everything(), ~if_else(is.na(.x), median(.x, na.rm = TRUE), .x))) %>%
+  mutate(front = front/mis_duration,
+         back = back/mis_duration,
+         attack = attack/mis_duration,
+         attacklatency = attacklatency/mis_duration,
+         approachlatency = approachlatency/mis_duration) %>%
+  select(-mis_duration)
+
+pca_agg_all = prcomp(aggression, scale = TRUE, center = TRUE)
+mis1_all = predict(pca_agg_all)[,1]
+
+activity = personality_all %>% 
+  select(walk, still, hang, jump, chew, hole, groom, oft_duration) %>% 
+  mutate(across(everything(), ~if_else(is.na(.x), median(.x, na.rm = TRUE), .x)))%>%
+  mutate(walk = walk/oft_duration,
+         still = still/oft_duration,
+         hang = hang/oft_duration,
+         jump = jump/oft_duration,
+         chew = chew/oft_duration,
+         hole = hole/oft_duration,
+         groom = groom/oft_duration) %>%
+  select(-oft_duration)
+
+pca_act_all = prcomp(activity, scale = TRUE, center = TRUE)
+oft1_all = predict(pca_act_all)[,1]
+
+personality_all$oft1 = unlist(oft1_all * -1)
+personality_all$mis1 = unlist(mis1_all * -1)
+
+###############
+#### OFT 1 ####
+###############
+
+#non-adjusted repeatability ####
+OFTna_all <- lmer(oft1 ~ (1|squirrel_id) + (1|gridyear),
+              personality_all)
+summary(OFTna_all)
+plot(OFTna_all)
+hist(resid(OFTna_all))
+
+OFTna_all.sim <- arm::sim(OFTna_all, 1000)
+OFTna_all.fixef = OFTna_all.sim@fixef
+OFTna_all.ranef = OFTna_all.sim@ranef
+OFTna_all.fixef = coda::as.mcmc(OFTna_all.fixef)
+MCMCglmm::posterior.mode(OFTna_all.fixef)
+coda::HPDinterval(OFTna_all.fixef)
+
+##among-indiv variance
+OFTna_all.bID <- OFTna_all.sim@ranef$squirrel_id
+OFTna_all.bvar <- as.vector(apply(OFTna_all.bID, 1, var))
+OFTna_all.bvar <- coda::as.mcmc(OFTna_all.bvar)
+MCMCglmm::posterior.mode(OFTna_all.bvar)
+coda::HPDinterval(OFTna_all.bvar)
+
+##residual variance
+OFTna_all.rvar <- OFTna_all.sim@sigma^2
+OFTna_all.rvar <- coda::as.mcmc(OFTna_all.rvar)
+MCMCglmm::posterior.mode(OFTna_all.rvar)
+coda::HPDinterval(OFTna_all.rvar)
+
+##repeatability
+OFTna_all.rID <- OFTna_all.bvar/(OFTna_all.bvar + OFTna_all.rvar)
+MCMCglmm::posterior.mode(OFTna_all.rID)
+coda::HPDinterval(OFTna_all.rID)
+
+#adjusted repeatability ####
+OFTa_all <- lmer(oft1 ~ trialnumber + sex +
+               (1|squirrel_id) + (1|gridyear),
+             personality_all)
+summary(OFTa_all)
+plot(OFTa_all)
+hist(resid(OFTa_all))
+
+OFTa_all.sim <- arm::sim(OFTa_all, 1000)
+OFTa_all.fixef = OFTa_all.sim@fixef
+OFTa_all.ranef = OFTa_all.sim@ranef
+OFTa_all.fixef = coda::as.mcmc(OFTa_all.fixef)
+MCMCglmm::posterior.mode(OFTa_all.fixef)
+coda::HPDinterval(OFTa_all.fixef)
+
+##among-indiv variance
+OFTa_all.bID <- OFTa_all.sim@ranef$squirrel_id
+OFTa_all.bvar <- as.vector(apply(OFTa_all.bID, 1, var))
+OFTa_all.bvar <- coda::as.mcmc(OFTa_all.bvar)
+MCMCglmm::posterior.mode(OFTa_all.bvar)
+coda::HPDinterval(OFTa_all.bvar)
+
+##residual variance
+OFTa_all.rvar <- OFTa_all.sim@sigma^2
+OFTa_all.rvar <- coda::as.mcmc(OFTa_all.rvar)
+MCMCglmm::posterior.mode(OFTa_all.rvar)
+coda::HPDinterval(OFTa_all.rvar)
+
+##repeatability
+OFTa_all.rID <- OFTa_all.bvar/(OFTa_all.bvar + OFTa_all.rvar)
+MCMCglmm::posterior.mode(OFTa_all.rID)
+coda::HPDinterval(OFTa_all.rID)
+
+###############
+#### MIS 1 ####
+###############
+
+
+
