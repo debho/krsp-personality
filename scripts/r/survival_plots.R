@@ -16,6 +16,8 @@ autumn_activity_scatter_fig <- visreg(survival_to_autumn,
                                       ylab = "Probability of survival to autumn",
                                       point = list(alpha = 0.5,
                                                    size = 3),
+                                      scale = "response",
+                                      partial = T,
                                       fill = list(alpha = 0)) +
   scale_color_paletteer_d("ggprism::colorblind_safe",
                           labels = c("Low Density",
@@ -49,6 +51,8 @@ autumn_aggression_scatter_fig <- visreg(survival_to_autumn,
                                         ylab = "Probability of survival to autumn",
                                         point = list(alpha = 0.5,
                                                      size = 3),
+                                        scale = "response",
+                                        partial = T,
                                         fill = list(alpha = 0)) +
   scale_color_paletteer_d("ggprism::colorblind_safe",
                           labels = c("Low Density",
@@ -80,7 +84,8 @@ autumn_activity_heatmap <- visreg2d(survival_to_autumn,
                                     "oft1", "grid_density",
                                     plot.type = "gg",
                                     xlab = "Activity",
-                                    ylab = "Grid Density\n(squirrels per ha)") +
+                                    ylab = "Grid Density\n(squirrels per ha)",
+                                    scale = "response") +
   scale_fill_paletteer_c("viridis::rocket") +
   labs(fill = "Probability of \nsurviving to autumn",
        tag = "A.") +
@@ -106,7 +111,8 @@ autumn_aggression_heatmap <- visreg2d(survival_to_autumn,
                                       "mis1", "grid_density",
                                       plot.type = "gg",
                                       xlab = "Aggression",
-                                      ylab = "Grid Density\n(squirrels per ha)") +
+                                      ylab = "Grid Density\n(squirrels per ha)",
+                                      scale = "response") +
   scale_fill_paletteer_c("viridis::rocket") +
   labs(fill = "Probability of \nsurviving to autumn",
        tag = "B.") +
@@ -136,6 +142,8 @@ overwinter_activity_scatter_fig <- visreg(survival_to_200d,
                                           ylab = "Probability of overwinter survival",
                                           point = list(alpha = 0.5,
                                                        size = 3),
+                                          scale = "response",
+                                          partial = T,
                                           fill = list(alpha = 0)) +
   scale_color_paletteer_d("ggprism::viridis",
                           labels = c("Low Density",
@@ -169,6 +177,8 @@ overwinter_aggression_scatter_fig <- visreg(survival_to_200d,
                                             ylab = "Probability of overwinter survival",
                                             point = list(size = 3,
                                                          alpha = 0.5),
+                                            scale = "response",
+                                            partial = T,
                                             fill = list(alpha = 0)) +
   scale_color_paletteer_d("ggprism::viridis",
                           labels = c("Low Density",
@@ -200,7 +210,8 @@ overwinter_activity_heatmap <- visreg2d(survival_to_200d,
                                            "oft1", "grid_density",
                                            plot.type = "gg",
                                            xlab = "Activity",
-                                           ylab = "Grid Density\n(squirrels per ha)") +
+                                           ylab = "Grid Density\n(squirrels per ha)",
+                                        scale = "response") +
   scale_fill_paletteer_c("viridis::mako") +
   labs(fill = "Probability of \noverwinter survival",
        tag = "C.") +
@@ -226,7 +237,8 @@ overwinter_aggression_heatmap <- visreg2d(survival_to_200d,
                                         "mis1", "grid_density",
                                         plot.type = "gg",
                                         xlab = "Aggression",
-                                        ylab = "Grid Density\n(squirrels per ha)") +
+                                        ylab = "Grid Density\n(squirrels per ha)",
+                                        scale = "response") +
   scale_fill_paletteer_c("viridis::mako") +
   labs(fill = "Probability of \noverwinter survival",
        tag = "D.") +
@@ -249,14 +261,14 @@ overwinter_aggression_heatmap <- visreg2d(survival_to_200d,
 overwinter_aggression_heatmap
 
 # FIGURE 1 personality x density: complete ####
-ggsave("figures/FINAL/fig 1_autumn.png",
+ggsave("figures/FINAL/fig 1_autumn_v2.png",
        grid.arrange(autumn_activity_heatmap,
                     autumn_activity_scatter_fig,
                     autumn_aggression_heatmap,
                     autumn_aggression_scatter_fig,
                     ncol = 2,
                     nrow = 2))
-ggsave("figures/FINAL/fig 1_overwinter.png",
+ggsave("figures/FINAL/fig 1_overwinter_v2.png",
        grid.arrange(overwinter_activity_heatmap,
                     overwinter_activity_scatter_fig,
                     overwinter_aggression_heatmap,
@@ -272,6 +284,8 @@ autumn_personality_scatter_fig <- visreg(survival_to_autumn,
                                          ylab = "Probability of survival to autumn",
                                          point = list(alpha = 0.5,
                                                       size = 3),
+                                         scale = "response",
+                                         partial = T,
                                          fill = list(alpha = 0)) +
   scale_color_paletteer_d("ggprism::colorblind_safe",
                           labels = c("Low Activity",
@@ -305,6 +319,8 @@ overwinter_personality_scatter_fig <- visreg(survival_to_200d,
                                              ylab = "Probability of overwinter survival",
                                              point = list(alpha = 0.5,
                                                           size = 3),
+                                             scale = "response",
+                                             partial = T,
                                              fill = list(alpha = 0)) +
   scale_color_paletteer_d("ggprism::viridis",
                           labels = c("Low Activity",
@@ -336,7 +352,8 @@ autumn_personality_heatmap <- visreg2d(survival_to_autumn,
                                     "mis1", "oft1",
                                     plot.type = "gg",
                                     xlab = "Aggression",
-                                    ylab = "Activity") +
+                                    ylab = "Activity",
+                                    scale = "response") +
   scale_fill_paletteer_c("viridis::rocket") +
   labs(fill = "Probability of \nsurviving to autumn",
        tag = "A.") +
@@ -362,7 +379,8 @@ overwinter_personality_heatmap <- visreg2d(survival_to_200d,
                                            "mis1", "oft1",
                                            plot.type = "gg",
                                            xlab = "Aggression",
-                                           ylab = "Activity") +
+                                           ylab = "Activity",
+                                           scale = "response") +
   scale_fill_paletteer_c("viridis::mako") +
   labs(fill = "Probability of \noverwinter survival",
        tag = "B.") +
@@ -385,7 +403,7 @@ overwinter_personality_heatmap <- visreg2d(survival_to_200d,
 overwinter_personality_heatmap
 
 # FIGURE 2 activity x aggression: complete ####
-ggsave("figures/fig 2.png",
+ggsave("figures/FINAL/fig 2_v2.png",
        grid.arrange(autumn_personality_heatmap,
                     autumn_personality_scatter_fig,
                     overwinter_personality_heatmap,
