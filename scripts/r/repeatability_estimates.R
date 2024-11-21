@@ -333,5 +333,68 @@ coda::HPDinterval(OFTa_all.rID)
 #### MIS 1 ####
 ###############
 
+#non-adjusted repeatability ####
+MISna_all <- lmer(mis1 ~ (1|squirrel_id) + (1|gridyear),
+                  personality_all)
+summary(MISna_all)
+plot(MISna_all)
+hist(resid(MISna_all))
 
+MISna_all.sim <- arm::sim(MISna_all, 1000)
+MISna_all.fixef = MISna_all.sim@fixef
+MISna_all.ranef = MISna_all.sim@ranef
+MISna_all.fixef = coda::as.mcmc(MISna_all.fixef)
+MCMCglmm::posterior.mode(MISna_all.fixef)
+coda::HPDinterval(MISna_all.fixef)
+
+##among-indiv variance
+MISna_all.bID <- MISna_all.sim@ranef$squirrel_id
+MISna_all.bvar <- as.vector(apply(MISna_all.bID, 1, var))
+MISna_all.bvar <- coda::as.mcmc(MISna_all.bvar)
+MCMCglmm::posterior.mode(MISna_all.bvar)
+coda::HPDinterval(MISna_all.bvar)
+
+##residual variance
+MISna_all.rvar <- MISna_all.sim@sigma^2
+MISna_all.rvar <- coda::as.mcmc(MISna_all.rvar)
+MCMCglmm::posterior.mode(MISna_all.rvar)
+coda::HPDinterval(MISna_all.rvar)
+
+##repeatability
+MISna_all.rID <- MISna_all.bvar/(MISna_all.bvar + MISna_all.rvar)
+MCMCglmm::posterior.mode(MISna_all.rID)
+coda::HPDinterval(MISna_all.rID)
+
+#adjusted repeatability ####
+MISa_all <- lmer(mis1 ~ trialnumber + sex +
+                   (1|squirrel_id) + (1|gridyear),
+                 personality_all)
+summary(MISa_all)
+plot(MISa_all)
+hist(resid(MISa_all))
+
+MISa_all.sim <- arm::sim(MISa_all, 1000)
+MISa_all.fixef = MISa_all.sim@fixef
+MISa_all.ranef = MISa_all.sim@ranef
+MISa_all.fixef = coda::as.mcmc(MISa_all.fixef)
+MCMCglmm::posterior.mode(MISa_all.fixef)
+coda::HPDinterval(MISa_all.fixef)
+
+##among-indiv variance
+MISa_all.bID <- MISa_all.sim@ranef$squirrel_id
+MISa_all.bvar <- as.vector(apply(MISa_all.bID, 1, var))
+MISa_all.bvar <- coda::as.mcmc(MISa_all.bvar)
+MCMCglmm::posterior.mode(MISa_all.bvar)
+coda::HPDinterval(MISa_all.bvar)
+
+##residual variance
+MISa_all.rvar <- MISa_all.sim@sigma^2
+MISa_all.rvar <- coda::as.mcmc(MISa_all.rvar)
+MCMCglmm::posterior.mode(MISa_all.rvar)
+coda::HPDinterval(MISa_all.rvar)
+
+##repeatability
+MISa_all.rID <- MISa_all.bvar/(MISa_all.bvar + MISa_all.rvar)
+MCMCglmm::posterior.mode(MISa_all.rID)
+coda::HPDinterval(MISa_all.rID)
 
