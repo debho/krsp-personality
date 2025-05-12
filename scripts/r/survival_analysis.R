@@ -113,6 +113,8 @@ summary(mis_indiv) #no significant effects
 dat = personality_imputed %>% 
   mutate(across(c(year, dam_id, litter_id, grid, mastyear), as_factor)) 
 
+dat$mastyear <- relevel(dat$mastyear, ref = "No")
+
 survival_to_autumn = glmer(made_it ~
                              oft1*mis1*grid_density +
                              part_sc*grid_density +
@@ -141,6 +143,8 @@ plot(simulationOutput)
 # Model 2 Survival to 200 days #### --------------------------------------------
 dat2 = personality_imputed %>% 
   mutate(across(c(year, dam_id, litter_id, grid, mastyear), as_factor))
+
+dat2$mastyear <- relevel(dat2$mastyear, ref = "No")
 
 survival_to_200d = glmer(survived_200d ~ 
                            oft1*mis1*grid_density +

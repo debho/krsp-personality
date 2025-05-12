@@ -27,7 +27,8 @@ con <- DBI::dbConnect(RMySQL::MySQL(),
 
 
 # Create Personality file
-personality = read_csv('data/personality-master-updated.csv', show_col_types = FALSE) %>% # nolint
+personality = read_csv('data/personality-master-updated.csv',
+                       show_col_types = FALSE) %>% # nolint
   janitor::clean_names() %>%
   filter(ageclass == "J",
          exclude_unless_video_reanalyzed == "N",
@@ -104,5 +105,8 @@ predictions = predict(part_model, missing_parts) %>%
 # write file
 personality = bind_rows(full_data, predictions) %>%
   filter(!is.na(part))
+
+personality$sex[personality$squirrel_id == "23558"] = "F"
+#correcting sex as it was incorrectly recorded for Trial 1
 
 write_csv(personality, file = 'data/personality-mrw-imputed.csv')

@@ -15,12 +15,16 @@ personality2 <- personality2 %>%
 personality_repeat <- personality %>%
   filter(squirrel_id %in% personality2$squirrel_id) %>%
   bind_rows(personality2)
+#subsets those with trial 2 from the full dataset (so there's trial 1 AND 2)
 
 personality_repeat <- personality_repeat %>%
   mutate(gridyear = paste(grid,year))
 
 n_distinct(personality_repeat$squirrel_id)
 #n = 60 juveniles
+
+count(personality_repeat, sex)
+#F: n = 35 juveniles; M: n = 25 juveniles
 
 # run PCA on this subset for sanity purposes
 personality_repeat[is.na(personality_repeat$oft_duration),
@@ -209,10 +213,14 @@ coda::HPDinterval(MISa.rID)
 #### ALL TRIALS ####
 ####################
 
-#obtained personality_all by removing trial number filter in data-cleaning.R
+#obtained personality_all by removing trialnumber filter in data-cleaning.R
 personality_all <- personality_all %>%
   drop_na(front,
-          walk) #removes all missing behavioral assays
+          walk) %>% #removes all those with missing assays
+  filter(squirrel_id != 23686) #removing this individual as sex is unknown
+
+personality_all$sex[personality_all$squirrel_id == "23558"] = "F"
+#correcting sex as it was incorrectly recorded for Trial 1
 
 write_csv(personality_all, "data/personality-all.csv")
 
@@ -221,7 +229,15 @@ personality_all <- read.csv("data/personality-all.csv",
   mutate(gridyear = paste(grid,year))
 
 n_distinct(personality_all$squirrel_id)
-#n = 270 juveniles
+#n = 269 juveniles
+
+count(personality_all, trialnumber)
+#n = 2 missing trial 1, but has trial 2 data:
+#13235, 23001
+
+distinct(personality_all,squirrel_id,sex) %>%
+  count(sex)
+#F: n = 152 juveniles; M: n = 117 juveniles
 
 # run PCA on this for sanity purposes
 personality_all[is.na(personality_all$oft_duration),

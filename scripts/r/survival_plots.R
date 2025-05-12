@@ -480,6 +480,7 @@ dat_analysis <- dat %>%
          !is.na(grid_density),
          !is.na(part_sc),
          !is.na(growth_sc))
+#ensures that only the individuals included in the model are in this figure
 
 survival_autumn_mast_fig <- ggplot(dat_analysis,
                                    aes(mastyear, made_it, fill = mastyear)) +
@@ -493,7 +494,7 @@ survival_autumn_mast_fig <- ggplot(dat_analysis,
               show.legend = F) +
   scale_fill_paletteer_d("ggprism::colorblind_safe") +
   labs(x = "Mast Year?",
-       y = "Probability of survival to autumn",
+       y = "Survival to autumn",
        col = "Year",
        fill = "Mast Year?",
        tag = "a.") + 
@@ -515,7 +516,7 @@ survival_200d_mast_fig <- ggplot(dat,
   geom_violin(alpha = 0.6) +
   scale_fill_paletteer_d("ggprism::colorblind_safe") +
   labs(x = "Mast Year?",
-       y = "Probability of overwinter survival",
+       y = "Overwinter survival",
        col = "Year",
        fill = "Mast Year?",
        tag = "b.") + 
