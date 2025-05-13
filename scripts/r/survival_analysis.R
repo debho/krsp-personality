@@ -70,6 +70,7 @@ personality <- personality %>%
   ungroup() %>%
   mutate(treatment = factor(treatment))
 
+#assigns the mean growth rate (by grid-year combination) to individuals missing growth rates
 personality_imputed <- personality %>%
   group_by(grid, year) %>%
   mutate(growth = ifelse(is.na(growth),

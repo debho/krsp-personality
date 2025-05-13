@@ -1,0 +1,817 @@
+---
+title: "Peer pressure: Are the fitness benefits of animal personality traits affected by conspecific density?"
+subtitle: "Ho et al. (2025)"
+date: "May 13, 2025"
+output: 
+  rmdformats::downcute
+---
+
+```{r, include = FALSE}
+options(tidyverse.quiet = TRUE)
+library(tidyverse)
+library(RMySQL)
+library(ade4) #for PCA
+library(ggplot2)
+library(lme4) #for glmers
+library(car)
+library(DHARMa)
+```
+
+These analyses are adapted from the [code that Matthew Whalen wrote in May 2022](https://github.com/mwhalen18/krsp-personality). I tweaked the code as needed as we finalized the models and analyses.
+
+# Data cleaning
+
+`scripts/r/data-cleaning.R`
+
+We read in raw personality data from the master file (`data/personality-master-updated.csv`) and filtered for juveniles. We also ran filters to exclude:
+
+-   Records that indicated that they should be excluded
+
+-   Personality data scored by SWK due to GC experiment
+
+-   Any re-trials (i.e., only included the first trial for each individual)
+
+-   Squirrels from any grid other than **JO, KL, and SU**
+
+The model in `scripts/r/model-training.R` was used to predict and impute as many missing parturition dates as possible.
+
+```{r}
+personality <- read.csv("data/personality-mrw-imputed.csv")
+
+glimpse(personality)
+```
+
+After this, we get survival data to autumn and overwinter (200 days) in `scripts/r/survival_data.R` by pulling census data from the database.
+
+I also added in a column to indicate mast years (2005 and 2019) and non-mast years and to indicate treatment ('rattle' for JO, 'control' for KL and SU).
+
+# Preparing data for analysis
+
+`scripts/r/survival_analysis.R`
+
+First, we standardize growth rate and part dates by grid-year combination.
+
+```{r}
+personality = read_csv('data/personality-mrw-survival.csv', show_col_types = FALSE) %>% 
+  mutate(survival = as.integer(survived_200d)) %>% 
+  group_by(grid, year) %>% 
+  mutate(growth_sc = scale(growth, scale = T, center = T)[,1],
+         part_sc = scale(part, scale = T, center = T)[,1]) %>% 
+  ungroup() 
+```
+
+Next, we conduct PCA on the OFT/MIS data to get loadings for activity and aggression.
+
+```{r}
+
+personality[is.na(personality$oft_duration),
+            "oft_duration"] <- 450.000
+personality[is.na(personality$mis_duration),
+            "mis_duration"] <- 300.000
+
+aggression = personality %>% 
+  select(front, back, attack, attacklatency, approachlatency, mis_duration) %>% 
+  mutate(across(everything(), ~if_else(is.na(.x), median(.x, na.rm = TRUE), .x))) %>%
+  mutate(front = front/mis_duration,
+         back = back/mis_duration,
+         attack = attack/mis_duration,
+         attacklatency = attacklatency/mis_duration,
+         approachlatency = approachlatency/mis_duration) %>%
+  select(-mis_duration)
+
+pca_agg = prcomp(aggression, scale = TRUE, center = TRUE)
+mis1 = predict(pca_agg)[,1]
+
+activity = personality %>% 
+  select(walk, still, hang, jump, chew, hole, groom, oft_duration) %>% 
+  mutate(across(everything(), ~if_else(is.na(.x), median(.x, na.rm = TRUE), .x)))%>%
+  mutate(walk = walk/oft_duration,
+         still = still/oft_duration,
+         hang = hang/oft_duration,
+         jump = jump/oft_duration,
+         chew = chew/oft_duration,
+         hole = hole/oft_duration,
+         groom = groom/oft_duration) %>%
+  select(-oft_duration)
+
+pca_act = prcomp(activity, scale = TRUE, center = TRUE)
+oft1 = predict(pca_act)[,1]
+```
+
+The loadings came out reversed, so we have to multiply them by -1.
+
+```{r}
+personality$oft1 = unlist(oft1 * -1)
+personality$mis1 = unlist(mis1 * -1)
+```
+
+Here are the plotted PCA loadings with a 95% ellipse.
+
+```{r}
+ggplot(personality, aes(oft1, mis1)) +
+  geom_point(size = 0.75) +
+  stat_ellipse(level = 0.95) +
+  labs(x = "Activity (PC1)",
+       y = "Aggression (PC1)") +
+  theme_minimal() +
+  theme(plot.margin = margin(20,20,20,20))
+```
+
+We scale spring grid density (may also be referred to as "density" hereafter) and age at time of trial globally, and activity (*oft1*) and aggression (*mis1*) by grid-year combination.
+
+```{r}
+personality <- personality %>%
+  mutate(grid_density = scale(grid_density, scale = T, center = T)[,1],
+         age_sc = scale(age_at_trial, scale = T, center = T)[,1]) %>%
+  group_by(grid, year) %>%
+  mutate(oft1 = scale(oft1, scale = T, center = T)[,1],
+         mis1 = scale(mis1, scale = T, center = T)[,1]) %>%
+  ungroup() %>%
+  mutate(treatment = factor(treatment))
+```
+
+## Imputing missing growth rates
+
+A number of juveniles were omitted from the models as they were missing growth rates. In order to include as many juveniles as possible in the analyses, we assigned the mean growth rate (for the corresponding grid-year combination) to those juveniles. This increased our sample size from *n* = 222 to *n* = 248.
+
+```{r}
+personality_imputed <- personality %>%
+  group_by(grid, year) %>%
+  mutate(growth = ifelse(is.na(growth),
+                            mean(growth, na.rm = T),
+                            growth)) %>%
+  mutate(growth_sc = scale(growth, scale = T, center = T)[,1]) %>%
+  ungroup()
+```
+
+# Generalized mixed-effects models
+
+`scripts/r/survival_analysis.R`
+
+## Survival to autumn
+
+Here's the model for survival to autumn. Fixed effects include:
+
+-   Personality measures
+
+    -   Activity (*oft1*)
+
+    -   Aggression (*mis1*)
+
+    -   Interaction between *oft1* and *mis1*
+
+-   Part date (*part_sc*)
+
+    -   Previously shown to influence juvenile survival (Williams et al., 2014)
+
+-   Growth rate (*growth_sc*)
+
+    -   Previously shown to be an important predictor of juvenile survival (Fisher et al., 2017; McAdam et al., 2019; Dantzer et al., 2020; Westrick et al., 2021)
+
+-   Mast/non-mast year (*mastyear*)
+
+    -   Juvenile survival is higher in mast years (McAdam et al., 2003; McAdam et al., 2019)
+
+-   Treatment (*treatment*)
+
+-   Spring grid density (*grid_density*)
+
+    -   Interactions between *grid_density* and
+
+        -   *oft1*
+
+        -   *mis1*
+
+        -   *oft1* x *mis1*
+
+        -   *part_sc*
+
+        -   *growth_sc*
+
+    -   Rationale for the selected interactions with *grid_density* are as below:
+
+        | Variable | Reason |
+        |--------------------|----------------------------------------------------|
+        | *oft1* | Examine whether selection on activity is density-dependent. |
+        | *mis1* | Examine whether selection on aggression is density-dependent. |
+        | *oft1* x *mis1* | Examine whether selection on the interaction between activity and aggression is density-dependent. |
+        | *part_sc* | Examine whether the effects of parturition date on survival are density-dependent |
+        | *growth_sc* | Prior studies have shown that selection on growth rate is density dependent (Dantzer et al., 2013) |
+
+Random effects include:
+
+-   Year (of birth) (*year*)
+
+-   Litter ID (*litter_id*)
+
+```{r}
+dat = personality_imputed %>% 
+  mutate(across(c(year, dam_id, litter_id, grid, mastyear), as_factor)) 
+
+dat$mastyear <- relevel(dat$mastyear, ref = "No")
+
+survival_to_autumn = glmer(made_it ~
+                             oft1*mis1*grid_density +
+                             part_sc*grid_density +
+                             growth_sc*grid_density +
+                             mastyear +
+                             treatment +
+                             (1|year) +
+                             (1|litter_id), 
+                           data = dat,
+                           na.action = 'na.omit',
+                           family = binomial(link = "logit"),
+                           control = glmerControl(optimizer = "bobyqa", optCtrl = list(maxfun = 1e8)))
+```
+
+### ANOVA
+
+```{r}
+car::Anova(survival_to_autumn)
+```
+
+-   Significant effect of mast year
+
+-   Significant interaction between growth rate and spring grid density
+
+-   Near-significant effect of aggression
+
+-   Near-significant interaction between activity and aggression
+
+### Model effects
+
+```{r}
+summary(survival_to_autumn)
+```
+
+Here, we see that:
+
+-   Juveniles have better survival during mast years
+
+-   Slower growing juveniles survive better under high density conditions
+
+-   There is a near-significant interaction effect between activity and aggression (aggressive juveniles survive better only if they are also more active), otherwise...
+
+-   Aggressive juveniles have poorer survival
+
+### 95% CI
+
+```{r}
+confint(survival_to_autumn,
+        method = "Wald")
+```
+
+### Model diagnostics
+
+Checking for any collinearity between predictors, where VIF \> 3 indicates collinearity:
+
+```{r}
+vif(survival_to_autumn)
+```
+
+All good here.
+
+```{r, results = 'hide'}
+simulationOutput = simulateResiduals(survival_to_autumn, plot = F)
+residuals(simulationOutput, quantileFunction = qnorm)
+```
+
+```{r}
+plot(simulationOutput)
+```
+
+No deviations here.
+
+## Overwinter survival (200 days)
+
+Here's the model for overwinter survival. All the fixed effects and random effects are the same as that of the survival to autumn model, except with *survived_to_200d* as the response variable instead.
+
+```{r}
+dat2 = personality_imputed %>% 
+  mutate(across(c(year, dam_id, litter_id, grid, mastyear), as_factor))
+
+dat2$mastyear <- relevel(dat2$mastyear, ref = "No")
+
+survival_to_200d = glmer(survived_200d ~ 
+                           oft1*mis1*grid_density +
+                           part_sc*grid_density +
+                           growth_sc*grid_density +
+                           mastyear +
+                           treatment +
+                           (1|year) +
+                           (1|litter_id),
+                         data = dat2,
+                         na.action = 'na.omit',
+                         family = 'binomial'(link = "logit"),
+                         control = glmerControl(optimizer = "bobyqa", optCtrl = list(maxfun = 1e8)))
+```
+
+### ANOVA
+
+```{r}
+car::Anova(survival_to_200d)
+```
+
+-   Significant effect of mast year
+
+-   Significant interaction between activity and density
+
+-   Significant interaction between activity and aggression.
+
+### Model effects
+
+```{r}
+summary(survival_to_200d)
+```
+
+Here, we see that:
+
+-   Juveniles have better survival during mast years
+
+-   Juveniles that are both highly active *and* aggressive survive better
+
+-   More active juveniles survive better under high density conditions
+
+### 95% CI
+
+```{r}
+confint(survival_to_200d,
+        method = "Wald")
+```
+
+### Model diagnostics
+
+Checking for any collinearity between predictors, where VIF \> 3 indicates colinearity:
+
+```{r}
+vif(survival_to_200d)
+```
+
+All good here.
+
+```{r, results='hide'}
+simulationOutput = simulateResiduals(survival_to_200d, plot = F)
+residuals(simulationOutput, quantileFunction = qnorm)
+```
+
+```{r}
+plot(simulationOutput)
+```
+
+No deviations here either.
+
+# Repeatability estimates
+
+`scripts/r/repeatability_estimates.R`
+
+To check that our measures of behavioral traits were reflective of personality, we estimated assay repeatability for:
+
+-   All juveniles with at least one measure of activity *and* aggression (i.e., complete measures for at least one trial)
+
+-   All juveniles with complete measures for two trials
+
+    -   To obtain a more precise estimate of within-individual repeatability
+
+```{r, include = FALSE}
+options(tidyverse.quiet = TRUE)
+library(arm)
+library(MCMCglmm)
+library(coda)
+```
+
+We estimated both non-adjusted (i.e., not corrected for potential methodological and/or environmental effects on behavior), as well as adjusted repeatabilities. Both models included the following mixed effects:
+
+-   Squirrel ID (*squirrel_id*)
+
+-   Grid-year combination (*gridyear*)
+
+The models for adjusted repeatabilities included the following fixed effects:
+
+-   Trial number (*trialnumber*)
+
+-   Sex (*sex*)
+
+For all sets of repeatability output, the first line indicates the variance, while the second line indicates the 95% CrI. Furthermore, values may change slightly every time the code is run as the analyses include simulating 1000 values for each behavioral trait score (i.e., activity, aggression) to obtain estimated effects.
+
+Code adapted from Martinig et al. (2021), with permission from the lead author (A.R. Martinig).
+
+## Juveniles with at least one trial
+
+Personality data were read in from the master file (`data/personality-master-updated.csv`) and filtered for juveniles. The same filters used to obtain the dataset for the main analyses were also applied, except that we removed the *trialnumber* filter to include all trials. Juveniles missing data for either of the behavioral assays were also excluded.
+
+```{r}
+personality_all <- read.csv("data/personality-all.csv",
+                            header = T) %>%
+  mutate(gridyear = paste(grid,year))
+
+glimpse(personality_all)
+```
+
+### Non-adjusted repeatability
+
+#### OFT
+
+```{r}
+OFTna_all <- lmer(oft1 ~ (1|squirrel_id) + (1|gridyear),
+              personality_all)
+summary(OFTna_all)
+```
+
+```{r, include = FALSE}
+OFTna_all.sim <- arm::sim(OFTna_all, 1000)
+OFTna_all.fixef = OFTna_all.sim@fixef
+OFTna_all.ranef = OFTna_all.sim@ranef
+OFTna_all.fixef = coda::as.mcmc(OFTna_all.fixef)
+
+#among-individal variance
+OFTna_all.bID <- OFTna_all.sim@ranef$squirrel_id
+OFTna_all.bvar <- as.vector(apply(OFTna_all.bID, 1, var))
+OFTna_all.bvar <- coda::as.mcmc(OFTna_all.bvar)
+
+#residual (within-individual) variance
+OFTna_all.rvar <- OFTna_all.sim@sigma^2
+OFTna_all.rvar <- coda::as.mcmc(OFTna_all.rvar)
+
+#repeatability (R)
+OFTna_all.rID <- OFTna_all.bvar/(OFTna_all.bvar + OFTna_all.rvar)
+```
+
+**Among-individual variance**
+
+```{r, echo = FALSE}
+MCMCglmm::posterior.mode(OFTna_all.bvar)
+coda::HPDinterval(OFTna_all.bvar)
+```
+
+**Residual (Within-individual) variance**
+
+```{r, echo = FALSE}
+MCMCglmm::posterior.mode(OFTna_all.rvar)
+coda::HPDinterval(OFTna_all.rvar)
+```
+
+**Repeatability (R)**
+
+```{r, echo = FALSE}
+MCMCglmm::posterior.mode(OFTna_all.rID)
+coda::HPDinterval(OFTna_all.rID)
+```
+
+#### MIS
+
+```{r}
+MISna_all <- lmer(mis1 ~ (1|squirrel_id) + (1|gridyear),
+                  personality_all)
+summary(MISna_all)
+```
+
+```{r, include = FALSE}
+MISna_all.sim <- arm::sim(MISna_all, 1000)
+MISna_all.fixef = MISna_all.sim@fixef
+MISna_all.ranef = MISna_all.sim@ranef
+MISna_all.fixef = coda::as.mcmc(MISna_all.fixef)
+
+#among-individual variance
+MISna_all.bID <- MISna_all.sim@ranef$squirrel_id
+MISna_all.bvar <- as.vector(apply(MISna_all.bID, 1, var))
+MISna_all.bvar <- coda::as.mcmc(MISna_all.bvar)
+
+#residual (within-individual) variance
+MISna_all.rvar <- MISna_all.sim@sigma^2
+MISna_all.rvar <- coda::as.mcmc(MISna_all.rvar)
+
+#repeatability
+MISna_all.rID <- MISna_all.bvar/(MISna_all.bvar + MISna_all.rvar)
+```
+
+**Among-individual variance**
+
+```{r, echo = FALSE}
+MCMCglmm::posterior.mode(MISna_all.bvar)
+coda::HPDinterval(MISna_all.bvar)
+```
+
+**Residual (Within-individual) variance**
+
+```{r, echo = FALSE}
+MCMCglmm::posterior.mode(MISna_all.rvar)
+coda::HPDinterval(MISna_all.rvar)
+```
+
+**Repeatability (R)**
+
+```{r, echo = FALSE}
+MCMCglmm::posterior.mode(MISna_all.rID)
+coda::HPDinterval(MISna_all.rID)
+```
+
+### Adjusted repeatability
+
+#### OFT
+
+```{r}
+OFTa_all <- lmer(oft1 ~ trialnumber + sex +
+               (1|squirrel_id) + (1|gridyear),
+             personality_all)
+summary(OFTa_all)
+```
+
+```{r, include = FALSE}
+OFTa_all.sim <- arm::sim(OFTa_all, 1000)
+OFTa_all.fixef = OFTa_all.sim@fixef
+OFTa_all.ranef = OFTa_all.sim@ranef
+OFTa_all.fixef = coda::as.mcmc(OFTa_all.fixef)
+
+#among-individual variance
+OFTa_all.bID <- OFTa_all.sim@ranef$squirrel_id
+OFTa_all.bvar <- as.vector(apply(OFTa_all.bID, 1, var))
+OFTa_all.bvar <- coda::as.mcmc(OFTa_all.bvar)
+
+#residual (within-individual) variance
+OFTa_all.rvar <- OFTa_all.sim@sigma^2
+OFTa_all.rvar <- coda::as.mcmc(OFTa_all.rvar)
+
+#repeatability
+OFTa_all.rID <- OFTa_all.bvar/(OFTa_all.bvar + OFTa_all.rvar)
+```
+
+**Among-individual variance**
+
+```{r, echo = FALSE}
+MCMCglmm::posterior.mode(OFTa_all.bvar)
+coda::HPDinterval(OFTa_all.bvar)
+```
+
+**Residual (within-individual) variance**
+
+```{r, echo = FALSE}
+MCMCglmm::posterior.mode(OFTa_all.rvar)
+coda::HPDinterval(OFTa_all.rvar)
+```
+
+**Repeatability (R)**
+
+```{r, echo = FALSE}
+MCMCglmm::posterior.mode(OFTa_all.rID)
+coda::HPDinterval(OFTa_all.rID)
+```
+
+#### MIS
+
+```{r}
+MISa_all <- lmer(mis1 ~ trialnumber + sex +
+                   (1|squirrel_id) + (1|gridyear),
+                 personality_all)
+summary(MISa_all)
+```
+
+```{r, include = FALSE}
+MISa_all.sim <- arm::sim(MISa_all, 1000)
+MISa_all.fixef = MISa_all.sim@fixef
+MISa_all.ranef = MISa_all.sim@ranef
+MISa_all.fixef = coda::as.mcmc(MISa_all.fixef)
+
+#among-individual variance
+MISa_all.bID <- MISa_all.sim@ranef$squirrel_id
+MISa_all.bvar <- as.vector(apply(MISa_all.bID, 1, var))
+MISa_all.bvar <- coda::as.mcmc(MISa_all.bvar)
+
+#residual (within-individual) variance
+MISa_all.rvar <- MISa_all.sim@sigma^2
+MISa_all.rvar <- coda::as.mcmc(MISa_all.rvar)
+
+#repeatability
+MISa_all.rID <- MISa_all.bvar/(MISa_all.bvar + MISa_all.rvar)
+```
+
+**Among-individual variance**
+
+```{r, echo = FALSE}
+MCMCglmm::posterior.mode(MISa_all.bvar)
+coda::HPDinterval(MISa_all.bvar)
+```
+
+**Residual (within-individual) variance**
+
+```{r, echo = FALSE}
+MCMCglmm::posterior.mode(MISa_all.rvar)
+coda::HPDinterval(MISa_all.rvar)
+```
+
+**Repeatability (R)**
+
+```{r, echo = FALSE}
+MCMCglmm::posterior.mode(MISa_all.rID)
+coda::HPDinterval(MISa_all.rID)
+```
+
+## Juveniles with two trials
+
+To obtain personality data for second trials, personality data were read in from the master file (`data/personality-master-updated.csv`) and filtered using `trialnumber == 2`. Other than the *trialnumber* filter, the same filters used to obtain the dataset for the main analyses were applied. Juveniles missing data for either of the behavioral assays were also excluded.
+
+To ensure that all juveniles in this subset had data for both their first *and* second trials, all squirrel IDs that were not found in the dataset when filtered using `trialnumber == 1` were excluded.
+
+```{r}
+personality_repeat <- read.csv("data/personality-repeatability.csv",
+                               header = T)
+
+glimpse(personality_repeat)
+```
+
+### Non-adjusted repeatability
+
+#### OFT
+
+```{r}
+OFTna <- lmer(oft1 ~ (1|squirrel_id) + (1|gridyear),
+               personality_repeat)
+summary(OFTna)
+```
+
+```{r, include = FALSE}
+OFTna.sim <- arm::sim(OFTna, 1000)
+OFTna.fixef = OFTna.sim@fixef
+OFTna.ranef = OFTna.sim@ranef
+OFTna.fixef = coda::as.mcmc(OFTna.fixef)
+
+#among-individual variance
+OFTna.bID <- OFTna.sim@ranef$squirrel_id
+OFTna.bvar <- as.vector(apply(OFTna.bID, 1, var))
+OFTna.bvar <- coda::as.mcmc(OFTna.bvar)
+
+##residual (within-individual) variance
+OFTna.rvar <- OFTna.sim@sigma^2
+OFTna.rvar <- coda::as.mcmc(OFTna.rvar)
+
+##repeatability
+OFTna.rID <- OFTna.bvar/(OFTna.bvar + OFTna.rvar)
+```
+
+**Among-individual variance**
+
+```{r, echo = FALSE}
+MCMCglmm::posterior.mode(OFTna.bvar)
+coda::HPDinterval(OFTna.bvar)
+```
+
+**Residual (within-individual) variance**
+
+```{r, echo = FALSE}
+MCMCglmm::posterior.mode(OFTna.rvar)
+coda::HPDinterval(OFTna.rvar)
+```
+
+**Repeatability (R)**
+
+```{r}
+MCMCglmm::posterior.mode(OFTna.rID)
+coda::HPDinterval(OFTna.rID)
+```
+
+#### MIS
+
+```{r}
+MISna <- lmer(mis1 ~ (1|squirrel_id) + (1|gridyear),
+                  personality_repeat)
+summary(MISna)
+```
+
+```{r, include = FALSE}
+MISna.sim <- arm::sim(MISna, 1000)
+MISna.fixef = MISna.sim@fixef
+MISna.ranef = MISna.sim@ranef
+MISna.fixef = coda::as.mcmc(MISna.fixef)
+
+#among-individual variance
+MISna.bID <- MISna.sim@ranef$squirrel_id
+MISna.bvar <- as.vector(apply(MISna.bID, 1, var))
+MISna.bvar <- coda::as.mcmc(MISna.bvar)
+
+##residual (within-individual) variance
+MISna.rvar <- MISna.sim@sigma^2
+MISna.rvar <- coda::as.mcmc(MISna.rvar)
+
+##repeatability
+MISna.rID <- MISna.bvar/(MISna.bvar + MISna.rvar)
+```
+
+**Among-individual variance**
+
+```{r, echo = FALSE}
+MCMCglmm::posterior.mode(MISna.bvar)
+coda::HPDinterval(MISna.bvar)
+```
+
+**Residual (within-individual) variance**
+
+```{r, echo = FALSE}
+MCMCglmm::posterior.mode(MISna.rvar)
+coda::HPDinterval(MISna.rvar)
+```
+
+**Repeatability (R)**
+
+```{r, echo = FALSE}
+MCMCglmm::posterior.mode(MISna.rID)
+coda::HPDinterval(MISna.rID)
+```
+
+### Adjusted repeatability
+
+#### OFT
+
+```{r}
+OFTa <- lmer(oft1 ~ trialnumber + sex +
+                   (1|squirrel_id) + (1|gridyear),
+                  personality_repeat)
+summary(OFTa)
+```
+
+```{r, include = FALSE}
+OFTa.sim <- arm::sim(OFTa, 1000)
+OFTa.fixef = OFTa.sim@fixef
+OFTa.ranef = OFTa.sim@ranef
+OFTa.fixef = coda::as.mcmc(OFTa.fixef)
+
+#among-individual variance
+OFTa.bID <- OFTa.sim@ranef$squirrel_id
+OFTa.bvar <- as.vector(apply(OFTa.bID, 1, var))
+OFTa.bvar <- coda::as.mcmc(OFTa.bvar)
+
+#residual (within-individual) variance
+OFTa.rvar <- OFTa.sim@sigma^2
+OFTa.rvar <- coda::as.mcmc(OFTa.rvar)
+
+##repeatability
+OFTa.rID <- OFTa.bvar/(OFTa.bvar + OFTa.rvar)
+```
+
+**Among-individual variance**
+
+```{r, echo = FALSE}
+MCMCglmm::posterior.mode(OFTa.bvar)
+coda::HPDinterval(OFTa.bvar)
+```
+
+**Residual (within-individual) variance**
+
+```{r, echo = FALSE}
+MCMCglmm::posterior.mode(OFTa.rvar)
+coda::HPDinterval(OFTa.rvar)
+```
+
+**Repeatability (R)**
+
+```{r, echo = FALSE}
+MCMCglmm::posterior.mode(OFTa.rID)
+coda::HPDinterval(OFTa.rID)
+```
+
+#### MIS
+
+```{r}
+MISa <- lmer(mis1 ~ trialnumber + sex +
+                   (1|squirrel_id) + (1|gridyear),
+                 personality_repeat)
+summary(MISa)
+```
+
+```{r, include = FALSE}
+MISa.sim <- arm::sim(MISa, 1000)
+MISa.fixef = MISa.sim@fixef
+MISa.ranef = MISa.sim@ranef
+MISa.fixef = coda::as.mcmc(MISa.fixef)
+
+#among-individual variance
+MISa.bID <- MISa.sim@ranef$squirrel_id
+MISa.bvar <- as.vector(apply(MISa.bID, 1, var))
+MISa.bvar <- coda::as.mcmc(MISa.bvar)
+
+#residual (within-individual) variance
+MISa.rvar <- MISa.sim@sigma^2
+MISa.rvar <- coda::as.mcmc(MISa.rvar)
+
+#repeatability
+MISa.rID <- MISa.bvar/(MISa.bvar + MISa.rvar)
+```
+
+**Among-individual variance**
+
+```{r, echo = FALSE}
+MCMCglmm::posterior.mode(MISa.bvar)
+coda::HPDinterval(MISa.bvar)
+```
+
+**Residual (within-individual) variance**
+
+```{r, echo = FALSE}
+MCMCglmm::posterior.mode(MISa.rvar)
+coda::HPDinterval(MISa.rvar)
+```
+
+**Repeatability (R)**
+
+```{r, echo = FALSE}
+MCMCglmm::posterior.mode(MISa.rID)
+coda::HPDinterval(MISa.rID)
+```

@@ -73,36 +73,36 @@ personality_repeat <- read.csv("data/personality-repeatability.csv",
 ###############
 
 #non-adjusted repeatability ####
-OFTna_all <- lmer(oft1 ~ (1|squirrel_id) + (1|gridyear),
+OFTna <- lmer(oft1 ~ (1|squirrel_id) + (1|gridyear),
                personality_repeat)
-summary(OFTna_all)
-plot(OFTna_all)
-hist(resid(OFTna_all))
+summary(OFTna)
+plot(OFTna)
+hist(resid(OFTna))
 
-OFTna_all.sim <- arm::sim(OFTna_all, 1000)
-OFTna_all.fixef = OFTna_all.sim@fixef
-OFTna_all.ranef = OFTna_all.sim@ranef
-OFTna_all.fixef = coda::as.mcmc(OFTna_all.fixef)
-MCMCglmm::posterior.mode(OFTna_all.fixef)
-coda::HPDinterval(OFTna_all.fixef)
+OFTna.sim <- arm::sim(OFTna, 1000)
+OFTna.fixef = OFTna.sim@fixef
+OFTna.ranef = OFTna.sim@ranef
+OFTna.fixef = coda::as.mcmc(OFTna.fixef)
+MCMCglmm::posterior.mode(OFTna.fixef)
+coda::HPDinterval(OFTna.fixef)
 
 ##among-indiv variance
-OFTna_all.bID <- OFTna_all.sim@ranef$squirrel_id
-OFTna_all.bvar <- as.vector(apply(OFTna_all.bID, 1, var))
-OFTna_all.bvar <- coda::as.mcmc(OFTna_all.bvar)
-MCMCglmm::posterior.mode(OFTna_all.bvar)
-coda::HPDinterval(OFTna_all.bvar)
+OFTna.bID <- OFTna.sim@ranef$squirrel_id
+OFTna.bvar <- as.vector(apply(OFTna.bID, 1, var))
+OFTna.bvar <- coda::as.mcmc(OFTna.bvar)
+MCMCglmm::posterior.mode(OFTna.bvar)
+coda::HPDinterval(OFTna.bvar)
 
 ##residual variance
-OFTna_all.rvar <- OFTna_all.sim@sigma^2
-OFTna_all.rvar <- coda::as.mcmc(OFTna_all.rvar)
-MCMCglmm::posterior.mode(OFTna_all.rvar)
-coda::HPDinterval(OFTna_all.rvar)
+OFTna.rvar <- OFTna.sim@sigma^2
+OFTna.rvar <- coda::as.mcmc(OFTna.rvar)
+MCMCglmm::posterior.mode(OFTna.rvar)
+coda::HPDinterval(OFTna.rvar)
 
 ##repeatability
-OFTna_all.rID <- OFTna_all.bvar/(OFTna_all.bvar + OFTna_all.rvar)
-MCMCglmm::posterior.mode(OFTna_all.rID)
-coda::HPDinterval(OFTna_all.rID)
+OFTna.rID <- OFTna.bvar/(OFTna.bvar + OFTna.rvar)
+MCMCglmm::posterior.mode(OFTna.rID)
+coda::HPDinterval(OFTna.rID)
 
 #adjusted repeatability ####
 OFTa <- lmer(oft1 ~ trialnumber + sex +
@@ -141,7 +141,7 @@ coda::HPDinterval(OFTa.rID)
 #### MIS 1 ####
 ###############
 
-#non-adjusted repeatability
+#non-adjusted repeatability####
 
 MISna <- lmer(mis1 ~ (1|squirrel_id) + (1|gridyear),
                   personality_repeat)
@@ -174,7 +174,7 @@ MISna.rID <- MISna.bvar/(MISna.bvar + MISna.rvar)
 MCMCglmm::posterior.mode(MISna.rID)
 coda::HPDinterval(MISna.rID)
 
-#adjusted repeatability
+#adjusted repeatability####
 
 MISa <- lmer(mis1 ~ trialnumber + sex +
                    (1|squirrel_id) + (1|gridyear),
