@@ -139,5 +139,64 @@ cones_JOKLSU <- cones_grids_years %>%
   filter(Grid %in% c("JO", "KL", "SU"),
          !(Grid == "JO" & Year < 2015)) %>%
   group_by(Grid, Year) %>%
-  mutate(gridyear = paste(Grid,Year))
+  mutate(gridyear = paste(Grid,Year)) %>%
+  filter(Year < 2023)
 
+cone_end <- cones_JOKLSU %>%
+  group_by(Grid) %>%
+  filter(Year == 2022)
+cone_gridyears <- dat %>%
+  select(grid,
+         year) %>%
+  mutate(gridyear = paste(grid, year)) %>%
+  distinct() %>%
+  left_join(cones_JOKLSU,
+            by = "gridyear") %>%
+  select(gridyear,
+         grid = Grid,
+         year = Year,
+         cone_counts,
+         cone_index,
+         cone_index_tm1,
+         mast) %>%
+  filter(year < 2023)
+
+cone_mast <- cones_JOKLSU %>%
+  filter(mast == "y")
+
+cones_gridyear <- ggplot(cones_JOKLSU,
+                         aes(Year, cone_counts, group = Grid)) +
+  geom_line(aes(col = Grid),
+            linewidth = 0.75) +
+  geom_point(aes(Year, cone_counts, col = Grid)) +
+  geom_text_repel(data = cone_end,
+                  aes(label = Grid,
+                      col = Grid),
+                  nudge_x = 0.75,
+                  show.legend = F,
+                  size = 5,
+                  fontface = "bold") +
+  # shades mast years
+  geom_vline(data = cone_mast,
+             aes(xintercept = Year),
+             linetype = "solid",
+             size = 7.5,
+             alpha = 0.3) +
+  scale_color_paletteer_d("ggthemes::colorblind") +
+  theme_classic() +
+  labs_pubr() +
+  labs(x = "Year",
+       y = "Total cones per tree",
+       col = "Grid") + 
+  theme(axis.text = element_text(size = 18),
+        legend.text = element_text(size = 14),
+        axis.title = element_text(size = 20),
+        legend.title = element_text(size = 16),
+        legend.box.spacing = margin(0, -25, 0, 0),
+        plot.margin = margin(30, 30, 30, 30),
+        axis.title.y = element_text(vjust = 5),
+        axis.title.x = element_text(vjust = -2))
+  
+plot(cones_gridyear)
+
+ggsave("figures/submission/fig s2.png", cones_gridyear)
