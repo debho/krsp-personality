@@ -414,3 +414,7 @@ MISa_all.rID <- MISa_all.bvar/(MISa_all.bvar + MISa_all.rvar)
 MCMCglmm::posterior.mode(MISa_all.rID)
 coda::HPDinterval(MISa_all.rID)
 
+trials_per_indiv <- personality_all %>%
+  group_by(squirrel_id) %>%
+  summarise(num_trials = n())
+

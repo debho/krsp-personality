@@ -253,14 +253,14 @@ overwinter_aggression_heatmap <- visreg2d(survival_to_200d,
 overwinter_aggression_heatmap
 
 # FIGURE 1 personality x density: complete ####
-ggsave("figures/FINAL/fig 1_autumn_v2.png",
+ggsave("figures/submission/fig 1_autumn.png",
        grid.arrange(autumn_activity_heatmap,
                     autumn_activity_scatter_fig,
                     autumn_aggression_heatmap,
                     autumn_aggression_scatter_fig,
                     ncol = 2,
                     nrow = 2))
-ggsave("figures/FINAL/fig 1_overwinter_v2.png",
+ggsave("figures/submission/fig 1_overwinter.png",
        grid.arrange(overwinter_activity_heatmap,
                     overwinter_activity_scatter_fig,
                     overwinter_aggression_heatmap,
@@ -392,7 +392,7 @@ overwinter_personality_heatmap <- visreg2d(survival_to_200d,
 overwinter_personality_heatmap
 
 # FIGURE 2 activity x aggression: complete ####
-ggsave("figures/FINAL/fig 2_v2.png",
+ggsave("figures/submission/fig 2.png",
        grid.arrange(autumn_personality_heatmap,
                     autumn_personality_scatter_fig,
                     overwinter_personality_heatmap,
@@ -454,7 +454,8 @@ density_gridyear <- ggplot(density_JOKLSU,
              linetype = "dashed",
              size = 0.75,
              alpha = 0.5) +
-  scale_color_paletteer_d("ggprism::colorblind_safe") +
+  scale_color_paletteer_d("ggprism::colorblind_safe",
+                          labels = c("Rattle", "Control")) +
   labs(x = "Year",
        y = "Spring Density (squirrels per ha)",
        col = "Treatment") + 
@@ -471,7 +472,7 @@ density_gridyear <- ggplot(density_JOKLSU,
 
 plot(density_gridyear)
 
-ggsave("figures/density_gridyear.png", density_gridyear)
+ggsave("figures/submission/fig s1.png", density_gridyear)
 
 # FIGURE S2: mastyear ####
 dat_analysis <- dat %>%
@@ -497,16 +498,19 @@ survival_autumn_mast_fig <- ggplot(dat_analysis,
        y = "Survival to autumn",
        col = "Year",
        fill = "Mast Year?",
-       tag = "a.") + 
+       tag = "A.") + 
+  theme_classic() +
+  labs_pubr() +
   theme(axis.text = element_text(size = 18),
         axis.title = element_text(size = 20),
         plot.margin = margin(0, 30, 30, 30),
         axis.title.y = element_text(vjust = 5),
-        axis.title.x = element_text(vjust = -2)) 
+        axis.title.x = element_text(vjust = -2),
+        plot.tag = element_text(face = "bold")) 
   
 plot(survival_autumn_mast_fig)
 
-survival_200d_mast_fig <- ggplot(dat,
+survival_200d_mast_fig <- ggplot(dat_analysis,
                                  aes(mastyear, survived_200d, fill = mastyear)) +
   theme_classic() +
   labs_pubr() +
@@ -519,7 +523,9 @@ survival_200d_mast_fig <- ggplot(dat,
        y = "Overwinter survival",
        col = "Year",
        fill = "Mast Year?",
-       tag = "b.") + 
+       tag = "B.") + 
+  theme_classic() +
+  labs_pubr() +
   theme(axis.text = element_text(size = 18),
         legend.text = element_text(size = 14),
         axis.title = element_text(size = 20),
@@ -527,11 +533,12 @@ survival_200d_mast_fig <- ggplot(dat,
         legend.box.spacing = margin(0, -15, 0, 0),
         plot.margin = margin(0, 30, 30, 0),
         axis.title.y = element_text(vjust = 5),
-        axis.title.x = element_text(vjust = -2))
+        axis.title.x = element_text(vjust = -2),
+        plot.tag = element_text(face = "bold"))
 
 plot(survival_200d_mast_fig)
 
-ggsave("figures/survival~mast.png",
+ggsave("figures/submission/fig s3.png",
        grid.arrange(survival_autumn_mast_fig,
                     survival_200d_mast_fig,
                     ncol = 2,

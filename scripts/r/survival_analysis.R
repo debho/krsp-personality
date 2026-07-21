@@ -13,8 +13,9 @@ library(standardize)
 library(ade4)
 library(lubridate)
 library(performance)
+library(lmerTest)
 
-# scale growth rate and part dates by grid-year combination
+#scale growth rate and part dates by grid-year combination
 personality = read_csv('data/personality-mrw-survival.csv', show_col_types = FALSE) %>% 
   mutate(survival = as.integer(survived_200d)) %>% 
   group_by(grid, year) %>% 
@@ -60,7 +61,7 @@ personality$oft1 = unlist(oft1 * -1)
 personality$mis1 = unlist(mis1 * -1)
 
 
-# scale personality by gridyear 
+#scale personality by gridyear 
 personality <- personality %>%
   mutate(grid_density = scale(grid_density, scale = T, center = T)[,1],
          age_sc = scale(age_at_trial, scale = T, center = T)[,1]) %>%
@@ -78,32 +79,39 @@ personality_imputed <- personality %>%
                             growth)) %>%
   mutate(growth_sc = scale(growth, scale = T, center = T)[,1]) %>%
   ungroup()
-  
 
 # Factors that may influence personality #### ----------------------------------
 oft_indiv <- lmer(oft1 ~
+                    cone_index_sc +
+                    cone_index_tm1_sc +
                     sex + 
-                    age_sc*grid_density +
-                    growth_sc*grid_density +
-                    part_sc*grid_density +
-                    mastyear +
-                    treatment +
-                    (1|year) +
-                    (1|litter_id),
+                    age_sc +
+                    grid_density +
+                    part_sc +
+                    growth_sc +
+                    (1|litter_id) +
+                    (1|year),
                   data = dat)
+car::Anova(oft_indiv)
 summary(oft_indiv) #no significant effects
+confint(oft_indiv,
+        method = "Wald")
 
 mis_indiv <- lmer(mis1 ~
-                    sex +
-                    age_sc*grid_density +
-                    growth_sc*grid_density +
-                    part_sc*grid_density +
-                    mastyear +
-                    treatment +
-                    (1|year) +
-                    (1|litter_id),
+                    cone_index_sc +
+                    cone_index_tm1_sc +
+                    sex + 
+                    age_sc +
+                    grid_density +
+                    part_sc +
+                    growth_sc +
+                    (1|litter_id) +
+                    (1|year),
                   data = dat)
+car::Anova(mis_indiv)
 summary(mis_indiv) #no significant effects
+confint(mis_indiv,
+        method = "Wald")
 
 # n=1 missing oft1
 # n=1 missing mis1
@@ -112,7 +120,17 @@ summary(mis_indiv) #no significant effects
 
 # Model 1 Survival to autumn #### -------------------------------------------------
 dat = personality_imputed %>% 
-  mutate(across(c(year, dam_id, litter_id, grid, mastyear), as_factor)) 
+  mutate(across(c(year, dam_id, litter_id, grid, mastyear), as_factor),
+         gridyear = as.factor(paste(grid, year, sep = " "))) %>%
+  filter(gridyear != "KL 2009",
+         gridyear != "SU 2021") %>%
+  left_join(select(cone_gridyears,
+                   -grid,
+                   -year),
+            by = "gridyear") %>%
+  mutate(cone_index_sc = scale(cone_index, scale = T, center = T)[,1],
+         cone_index_tm1_sc = scale(cone_index_tm1, scale = T, center = T)[,1])
+  
 
 dat$mastyear <- relevel(dat$mastyear, ref = "No")
 
@@ -143,7 +161,15 @@ plot(simulationOutput)
 
 # Model 2 Survival to 200 days #### --------------------------------------------
 dat2 = personality_imputed %>% 
-  mutate(across(c(year, dam_id, litter_id, grid, mastyear), as_factor))
+  mutate(across(c(year, dam_id, litter_id, grid, mastyear), as_factor),
+         gridyear = as.factor(paste(grid, year, sep = " "))) %>%
+  filter(gridyear != "KL 2009",
+         gridyear != "SU 2021")  %>%
+  left_join(select(cone_gridyears,
+                   -grid,
+                   -year),
+            by = "gridyear") %>%
+  mutate(cone_index_sc = scale(cone_index, scale = T, center = T)[,1])
 
 dat2$mastyear <- relevel(dat2$mastyear, ref = "No")
 
@@ -173,8 +199,12 @@ plot(simulationOutput)
 # Theres some wonkiness here with one of the random effects deviating
 # But it seems to not be a massive issue
 
+icc(oft_indiv, by_group = T, tolerance = 0)
+icc(mis_indiv, by_group = T, tolerance = 0)
 icc(survival_to_autumn, by_group = T, tolerance = 0)
 icc(survival_to_200d, by_group = T, tolerance = 0)
+vif(oft_indiv)
+vif(mis_indiv)
 vif(survival_to_autumn)
 vif(survival_to_200d)
 
